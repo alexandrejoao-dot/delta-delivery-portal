@@ -14,6 +14,12 @@ export function formatValue(v: number, unit: Unit, opts: { compact?: boolean } =
       return opts.compact ? v.toFixed(1) : `${v.toFixed(1)} / wk`;
     case 'count':
       return `${Math.round(v)}`;
+    case 'index':
+      return `${Math.round(v)}`;
+    case 'score':
+      return opts.compact ? v.toFixed(1) : `${v.toFixed(1)} / 5`;
+    case 'items':
+      return opts.compact ? `${Math.round(v)}` : `${Math.round(v)} items`;
   }
 }
 
@@ -24,7 +30,12 @@ export function formatDelta(id: MetricId, curr: number, prev: number): string | 
   if (!Number.isFinite(curr) || !Number.isFinite(prev)) return null;
   const unit = METRICS[id].unit;
   const d = curr - prev;
-  const shown = unit === 'percent' ? Math.round(Math.abs(d) * 100) : unit === 'points' || unit === 'count' ? Math.round(Math.abs(d)) : Number(Math.abs(d).toFixed(1));
+  const shown =
+    unit === 'percent'
+      ? Math.round(Math.abs(d) * 100)
+      : unit === 'points' || unit === 'count' || unit === 'index' || unit === 'items'
+        ? Math.round(Math.abs(d))
+        : Number(Math.abs(d).toFixed(1));
   if (shown === 0) return unit === 'percent' ? '±0 pp' : unit === 'days' ? '±0.0d' : '±0';
   const sign = d > 0 ? '+' : d < 0 ? '−' : '±';
   const abs = Math.abs(d);
@@ -38,7 +49,11 @@ export function formatDelta(id: MetricId, curr: number, prev: number): string | 
     case 'perWeek':
       return `${sign}${abs.toFixed(1)}/wk`;
     case 'count':
+    case 'index':
+    case 'items':
       return `${sign}${Math.round(abs)}`;
+    case 'score':
+      return `${sign}${abs.toFixed(1)}`;
   }
 }
 

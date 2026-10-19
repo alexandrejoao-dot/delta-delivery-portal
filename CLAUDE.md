@@ -38,7 +38,10 @@ src/
   metrics/                   Pure functions, no React. All maths lives here.
     catalogue.ts             Metric definitions + thresholds (the in-app KPI Playbook)
     flow.ts / predictability.ts / quality.ts / stats.ts / period.ts
-    scorecard.ts             All metric values for a group of squads + health signal
+    pulse.ts                 Pulse check (squad health check survey) scores
+    investment.ts            Development category mix
+    forecast.ts              Monte Carlo delivery forecast (seeded, deterministic)
+    scorecard.ts             All metric values for a group of squads + health signal + health index
     trend.ts                 Metric over trailing windows (sparklines/trend charts)
     insights.ts              Rule-based "conversation starters"
     __tests__/               Vitest
@@ -83,6 +86,9 @@ hover tooltips on every chart, legends for 2+ series.
 portal has stories to show: Borealis (scope creep), Granite (over-commitment), Ember (bug
 ratio climbing), Fjord (flow slowing), Juno (volatile velocity), Lumen (throughput dropping),
 Iris (improving), Atlas/Dune/Halo/Kestrel/Cobalt (healthy). Snapshot: 2 Oct 2026.
+Monthly pulse checks (7 per squad) and work categories (feature / tech debt / maintenance / defect)
+echo those stories (e.g. Granite's pulse is low, Ember's "Health of codebase" drops, Juno carries more
+tech debt). Later additions use their own RNG stream (`seed + n`) so existing generated values never shift.
 
 ## Next steps (suggested order)
 
@@ -96,7 +102,7 @@ Iris (improving), Atlas/Dune/Halo/Kestrel/Cobalt (healthy). Snapshot: 2 Oct 2026
      epic→initiative; sprint scope (committed, added, removed, completed-of-committed, completed-of-added).
 2. Auth + role-based default scope (squad members land on their squad).
 3. Persist shareable views in the URL (scope + period as query params).
-4. Forecasting: Monte Carlo "when will it be done?" from throughput history.
+4. Forecasting: "how many in 2 weeks?" is live (matrix column); add "when will it be done?" for a backlog / initiative.
 5. Next domain: Engineering (DORA) — add entities (deployments, incidents) to the model + an adapter.
 6. Pod metrics (formation-to-productivity, handoff overhead) — only after scope is agreed.
 

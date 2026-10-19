@@ -11,7 +11,7 @@ export const CHART = {
   axis: '#75777d',
   text: '#45474c',
   surface: '#ffffff',
-  series: ['#2a78d6', '#eb6834', '#1baf7a'],
+  series: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100'],
   target: '#75777d',
 };
 

@@ -3,14 +3,18 @@ import type {
   DeliveryLead,
   Domain,
   Initiative,
+  PulseCheck,
+  PulseDimension,
   Sprint,
   Squad,
   TeamType,
   ValueStream,
   WorkItem,
+  WorkCategory,
   WorkItemType,
 } from '../../model';
-import { createRng, type Rng } from './rng';
+import { PULSE_DIMENSIONS } from '../../model';
+import { createRng, type Rng } from '../../../lib/rng';
 
 /**
  * Dummy data generator.
@@ -41,6 +45,10 @@ interface Profile {
   velocityNoise?: number;
   sayDo?: [number, number];
   scopeChange?: number;
+  /** Share of stories that are tech debt, start → end (default 0.1) */
+  techDebt?: [number, number];
+  /** Pulse check mean score (1–5), start → end, plus per-dimension offsets */
+  pulse?: { base: [number, number]; offsets?: Partial<Record<PulseDimension, number>> };
 }
 
 interface SquadSeed {
@@ -81,13 +89,13 @@ const squadSeeds: SquadSeed[] = [
     id: 'sq-atlas', name: 'Atlas', domainId: 'dom-player', valueStreamId: 'vs-onboarding', deliveryLeadId: 'dl-ana',
     teamType: 'scrum', boardKey: 'ATL',
     // Healthy and improving
-    profile: { throughput: [6, 7.5], cycleMedian: [4.5, 3.4], cycleSigma: 0.55, waitMedian: 6, bugShare: [0.18, 0.14], velocity: 42, velocityNoise: 0.08, sayDo: [0.8, 0.9], scopeChange: 0.08 },
+    profile: { throughput: [6, 7.5], cycleMedian: [4.5, 3.4], cycleSigma: 0.55, waitMedian: 6, bugShare: [0.18, 0.14], velocity: 42, velocityNoise: 0.08, sayDo: [0.8, 0.9], scopeChange: 0.08, pulse: { base: [3.9, 4.2] } },
   },
   {
     id: 'sq-borealis', name: 'Borealis', domainId: 'dom-player', valueStreamId: 'vs-engagement', deliveryLeadId: 'dl-ana',
     teamType: 'scrum', boardKey: 'BOR',
     // Scope creep → falling commitment reliability
-    profile: { throughput: [7, 6.5], cycleMedian: [4, 5.2], cycleSigma: 0.6, waitMedian: 5, bugShare: [0.2, 0.22], velocity: 48, velocityNoise: 0.12, sayDo: [0.84, 0.63], scopeChange: 0.34 },
+    profile: { throughput: [7, 6.5], cycleMedian: [4, 5.2], cycleSigma: 0.6, waitMedian: 5, bugShare: [0.2, 0.22], velocity: 48, velocityNoise: 0.12, sayDo: [0.84, 0.63], scopeChange: 0.34, pulse: { base: [3.9, 3.4], offsets: { process: -0.6, mission: -0.4 } } },
   },
   {
     id: 'sq-cobalt', name: 'Cobalt', domainId: 'dom-player', valueStreamId: 'vs-engagement', deliveryLeadId: 'dl-ana',
@@ -103,19 +111,19 @@ const squadSeeds: SquadSeed[] = [
     id: 'sq-ember', name: 'Ember', domainId: 'dom-pay', valueStreamId: 'vs-deposits', deliveryLeadId: 'dl-pedro',
     teamType: 'scrum', boardKey: 'EMB',
     // Quality dip — bug share climbing
-    profile: { throughput: [6.5, 7], cycleMedian: [4.2, 4.6], cycleSigma: 0.55, waitMedian: 5, bugShare: [0.2, 0.42], velocity: 44, velocityNoise: 0.1, sayDo: [0.82, 0.76], scopeChange: 0.16 },
+    profile: { throughput: [6.5, 7], cycleMedian: [4.2, 4.6], cycleSigma: 0.55, waitMedian: 5, bugShare: [0.2, 0.42], velocity: 44, velocityNoise: 0.1, sayDo: [0.82, 0.76], scopeChange: 0.16, pulse: { base: [3.8, 3.5], offsets: { codebase: -0.9, release: -0.5 } } },
   },
   {
     id: 'sq-fjord', name: 'Fjord', domainId: 'dom-pay', valueStreamId: 'vs-withdrawals', deliveryLeadId: 'dl-pedro',
     teamType: 'kanban', boardKey: 'FJO',
     // Flow slowing down — cycle time and ageing WIP growing
-    profile: { throughput: [7, 5], cycleMedian: [3.5, 8.5], cycleSigma: 0.65, waitMedian: 5, bugShare: [0.2, 0.24] },
+    profile: { throughput: [7, 5], cycleMedian: [3.5, 8.5], cycleSigma: 0.65, waitMedian: 5, bugShare: [0.2, 0.24], pulse: { base: [3.8, 3.4], offsets: { speed: -0.7 } } },
   },
   {
     id: 'sq-granite', name: 'Granite', domainId: 'dom-pay', valueStreamId: 'vs-withdrawals', deliveryLeadId: 'dl-sofia',
     teamType: 'scrum', boardKey: 'GRA',
     // Chronic over-commitment
-    profile: { throughput: [5, 5.2], cycleMedian: [6, 6.2], cycleSigma: 0.6, waitMedian: 9, bugShare: [0.22, 0.24], velocity: 30, velocityNoise: 0.14, sayDo: [0.6, 0.58], scopeChange: 0.2 },
+    profile: { throughput: [5, 5.2], cycleMedian: [6, 6.2], cycleSigma: 0.6, waitMedian: 9, bugShare: [0.22, 0.24], velocity: 30, velocityNoise: 0.14, sayDo: [0.6, 0.58], scopeChange: 0.2, pulse: { base: [3.3, 3.0], offsets: { speed: -0.6, process: -0.4, fun: -0.3 } } },
   },
   {
     id: 'sq-halo', name: 'Halo', domainId: 'dom-core', valueStreamId: 'vs-identity', deliveryLeadId: 'dl-sofia',
@@ -126,24 +134,24 @@ const squadSeeds: SquadSeed[] = [
     id: 'sq-iris', name: 'Iris', domainId: 'dom-core', valueStreamId: 'vs-identity', deliveryLeadId: 'dl-sofia',
     teamType: 'kanban', boardKey: 'IRI',
     // Improving after a WIP-limit experiment
-    profile: { throughput: [5, 7.5], cycleMedian: [6, 3.6], cycleSigma: 0.55, waitMedian: 6, bugShare: [0.18, 0.15] },
+    profile: { throughput: [5, 7.5], cycleMedian: [6, 3.6], cycleSigma: 0.55, waitMedian: 6, bugShare: [0.18, 0.15], pulse: { base: [3.2, 4.1] } },
   },
   {
     id: 'sq-juno', name: 'Juno', domainId: 'dom-core', valueStreamId: 'vs-platform', deliveryLeadId: 'dl-tiago',
     teamType: 'scrum', boardKey: 'JUN',
     // Volatile velocity — planning instability
-    profile: { throughput: [6, 6], cycleMedian: [5, 5.3], cycleSigma: 0.7, waitMedian: 6, bugShare: [0.17, 0.18], velocity: 40, velocityNoise: 0.42, sayDo: [0.76, 0.74], scopeChange: 0.14 },
+    profile: { throughput: [6, 6], cycleMedian: [5, 5.3], cycleSigma: 0.7, waitMedian: 6, bugShare: [0.17, 0.18], velocity: 40, velocityNoise: 0.42, sayDo: [0.76, 0.74], scopeChange: 0.14, techDebt: [0.15, 0.32], pulse: { base: [3.6, 3.5], offsets: { process: -0.4, codebase: -0.3 } } },
   },
   {
     id: 'sq-kestrel', name: 'Kestrel', domainId: 'dom-core', valueStreamId: 'vs-platform', deliveryLeadId: 'dl-tiago',
     teamType: 'scrum', boardKey: 'KES',
-    profile: { throughput: [7, 7.4], cycleMedian: [3.6, 3.3], cycleSigma: 0.5, waitMedian: 5, bugShare: [0.13, 0.12], velocity: 50, velocityNoise: 0.07, sayDo: [0.88, 0.91], scopeChange: 0.07 },
+    profile: { throughput: [7, 7.4], cycleMedian: [3.6, 3.3], cycleSigma: 0.5, waitMedian: 5, bugShare: [0.13, 0.12], velocity: 50, velocityNoise: 0.07, sayDo: [0.88, 0.91], scopeChange: 0.07, pulse: { base: [4.1, 4.2] } },
   },
   {
     id: 'sq-lumen', name: 'Lumen', domainId: 'dom-core', valueStreamId: 'vs-platform', deliveryLeadId: 'dl-tiago',
     teamType: 'kanban', boardKey: 'LUM',
     // Throughput dropping
-    profile: { throughput: [9, 4.5], cycleMedian: [3.2, 4.2], cycleSigma: 0.55, waitMedian: 4, bugShare: [0.19, 0.2] },
+    profile: { throughput: [9, 4.5], cycleMedian: [3.2, 4.2], cycleSigma: 0.55, waitMedian: 4, bugShare: [0.19, 0.2], pulse: { base: [3.8, 3.3], offsets: { support: -0.5, autonomy: -0.5 } } },
   },
 ];
 
@@ -191,7 +199,17 @@ function buildInitiatives(asOfMs: number): Initiative[] {
   return out;
 }
 
-function buildWorkItems(rng: Rng, seed: SquadSeed, asOfMs: number, initiatives: Initiative[]): WorkItem[] {
+/**
+ * Development category. Uses its own RNG stream so adding it didn't change any other generated value.
+ * Bugs → defects; tasks split maintenance / tech debt; stories are features unless tech debt.
+ */
+function categoryFor(rng: Rng, type: WorkItemType, techDebt: number): WorkCategory {
+  if (type === 'bug') return 'defect';
+  if (type === 'task') return rng.chance(0.65) ? 'maintenance' : 'techDebt';
+  return rng.chance(techDebt) ? 'techDebt' : 'feature';
+}
+
+function buildWorkItems(rng: Rng, catRng: Rng, seed: SquadSeed, asOfMs: number, initiatives: Initiative[]): WorkItem[] {
   const items: WorkItem[] = [];
   const p = seed.profile;
   const myInitiatives = initiatives.filter((i) => i.valueStreamId === seed.valueStreamId);
@@ -219,6 +237,7 @@ function buildWorkItems(rng: Rng, seed: SquadSeed, asOfMs: number, initiatives: 
         key: `${seed.boardKey}-${1000 + n++}`,
         squadId: seed.id,
         type,
+        category: categoryFor(catRng, type, lerp(...(p.techDebt ?? [0.1, 0.1]), tStart)),
         summary: summary.charAt(0).toUpperCase() + summary.slice(1),
         storyPoints: type === 'story' ? rng.pick(STORY_POINTS) : type === 'bug' ? rng.pick([1, 2, 3] as const) : null,
         initiativeId: type === 'story' && myInitiatives.length && rng.chance(0.7) ? rng.pick(myInitiatives).id : null,
@@ -264,13 +283,44 @@ function buildSprints(rng: Rng, seed: SquadSeed, asOfMs: number): Sprint[] {
   return sprints;
 }
 
+const PULSE_COUNT = 7;
+const PULSE_EVERY_DAYS = 28;
+
+/** Monthly pulse checks; the latest closed 5 days before the snapshot. */
+function buildPulseChecks(rng: Rng, seed: SquadSeed, asOfMs: number): PulseCheck[] {
+  const pulse = seed.profile.pulse ?? { base: [3.8, 3.9] as [number, number] };
+  return Array.from({ length: PULSE_COUNT }, (_, i) => {
+    const k = PULSE_COUNT - 1 - i;
+    const t = i / (PULSE_COUNT - 1);
+    const base = lerp(pulse.base[0], pulse.base[1], t);
+    const scores = Object.fromEntries(
+      PULSE_DIMENSIONS.map((d) => {
+        // Offsets build up over time, so problems emerge rather than being there from day one
+        const off = (pulse.offsets?.[d.id] ?? 0) * (0.3 + 0.7 * t);
+        return [d.id, Math.round(clamp(base + off + 0.25 * rng.normal(), 1, 5) * 10) / 10];
+      }),
+    ) as Record<PulseDimension, number>;
+    return {
+      id: `${seed.id}-p${i + 1}`,
+      squadId: seed.id,
+      date: iso(asOfMs - (5 + k * PULSE_EVERY_DAYS) * DAY),
+      respondents: rng.int(5, 9),
+      scores,
+    };
+  });
+}
+
 export function generateDataset(seed = 20261002, asOf = MOCK_AS_OF): Dataset {
   const rng = createRng(seed);
   const asOfMs = Date.parse(asOf);
   const initiatives = buildInitiatives(asOfMs);
   const squads: Squad[] = squadSeeds.map(({ profile: _profile, ...s }) => s);
-  const workItems = squadSeeds.flatMap((s) => buildWorkItems(rng, s, asOfMs, initiatives));
+  // Separate streams for later additions, so existing generated values (and the squad stories) stay put
+  const catRng = createRng(seed + 1);
+  const pulseRng = createRng(seed + 2);
+  const workItems = squadSeeds.flatMap((s) => buildWorkItems(rng, catRng, s, asOfMs, initiatives));
   const sprints = squadSeeds.flatMap((s) => buildSprints(rng, s, asOfMs));
+  const pulseChecks = squadSeeds.flatMap((s) => buildPulseChecks(pulseRng, s, asOfMs));
   return {
     asOf,
     source: { id: 'mock', label: 'Dummy data (seeded generator)', isDummy: true },
@@ -281,5 +331,6 @@ export function generateDataset(seed = 20261002, asOf = MOCK_AS_OF): Dataset {
     initiatives,
     workItems,
     sprints,
+    pulseChecks,
   };
 }

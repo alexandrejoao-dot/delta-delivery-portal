@@ -1,20 +1,66 @@
-import { useMemo } from 'react';
-import { MdOutlineAnalytics, MdOutlineFlag, MdOutlineShuffle, MdOutlineWaves } from 'react-icons/md';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  MdOutlineAnalytics,
+  MdOutlineBugReport,
+  MdOutlineHourglassEmpty,
+  MdOutlineShuffle,
+  MdOutlineTimer,
+  MdOutlineTrackChanges,
+  MdOutlineWaves,
+} from 'react-icons/md';
 import { BarChart } from '../components/charts/BarChart';
 import { LineChart } from '../components/charts/LineChart';
 import { Sparkline } from '../components/charts/Sparkline';
 import { KpiCard } from '../components/KpiCard';
 import { SortableTable, type Column } from '../components/SortableTable';
-import { Card, CardHeader, cx, EmptyState, PageHeader, SquadAvatar, StatusBadge } from '../components/ui';
-import type { Squad } from '../data/model';
+import { Card, CardHeader, cx, EmptyState, PageHeader, Segmented, SquadAvatar, StatusBadge } from '../components/ui';
+import type { Squad, TeamType } from '../data/model';
 import { formatMetric, shortDate } from '../lib/format';
 import { navigate } from '../lib/router';
-import { evaluate, METRICS } from '../metrics/catalogue';
+import { evaluate, METRICS, type MetricId } from '../metrics/catalogue';
 import { weeklyThroughput } from '../metrics/flow';
 import { scorecard, type Scorecard } from '../metrics/scorecard';
 import { metricTrend } from '../metrics/trend';
 import { sprintSayDo, sprintVelocity } from '../metrics/predictability';
 import { useScopedSquads } from '../state/filters';
+
+/** Key metrics per team type — Scrum is read from commitments, Kanban from flow. */
+interface Box {
+  id: MetricId;
+  label?: string;
+  icon: ReactNode;
+}
+
+const SCRUM_BOXES: Box[] = [
+  { id: 'cycleP85', label: 'Cycle time (85th pct)', icon: <MdOutlineTimer /> },
+  { id: 'sayDo', label: 'Completion ratio', icon: <MdOutlineAnalytics /> },
+  { id: 'scopeChange', label: 'Scope volatility', icon: <MdOutlineShuffle /> },
+  { id: 'forecastAccuracy', icon: <MdOutlineTrackChanges /> },
+  { id: 'bugRatio', icon: <MdOutlineBugReport /> },
+];
+
+const KANBAN_BOXES: Box[] = [
+  { id: 'cycleP85', label: 'Cycle time (85th pct)', icon: <MdOutlineTimer /> },
+  { id: 'throughputCv', label: 'Throughput stability', icon: <MdOutlineWaves /> },
+  { id: 'ageingWipShare', label: 'Work item age', icon: <MdOutlineHourglassEmpty /> },
+  { id: 'forecastAccuracy', icon: <MdOutlineTrackChanges /> },
+  { id: 'bugRatio', icon: <MdOutlineBugReport /> },
+];
+
+function boxTrends(data: Parameters<typeof metricTrend>[0], squads: Squad[], boxes: Box[]) {
+  if (!squads.length) return {} as Record<MetricId, number[]>;
+  return Object.fromEntries(boxes.map((b) => [b.id, metricTrend(data, squads, b.id).map((t) => t.value)])) as Record<MetricId, number[]>;
+}
+
+function KpiRow({ boxes, sc, trends, periodLabel }: { boxes: Box[]; sc: Scorecard; trends: Record<MetricId, number[]>; periodLabel: string }) {
+  return (
+    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {boxes.map((b) => (
+        <KpiCard key={b.id} metricId={b.id} label={b.label} sc={sc} trend={trends[b.id]} icon={b.icon} periodLabel={periodLabel} compact />
+      ))}
+    </div>
+  );
+}
 
 interface Row {
   squad: Squad;
@@ -27,12 +73,23 @@ export function Predictability() {
   const { data, squads, period, label } = useScopedSquads();
   const scrum = useMemo(() => squads.filter((s) => s.teamType === 'scrum'), [squads]);
   const kanban = useMemo(() => squads.filter((s) => s.teamType === 'kanban'), [squads]);
-  const kanbanTrend = useMemo(() => metricTrend(data, kanban, 'throughputCv').map((t) => t.value), [data, kanban]);
   const scScrum = useMemo(() => scorecard(data, scrum, period), [data, scrum, period]);
   const scKanban = useMemo(() => scorecard(data, kanban, period), [data, kanban, period]);
   const sayDoTrend = useMemo(() => metricTrend(data, scrum, 'sayDo'), [data, scrum]);
   const scopeTrend = useMemo(() => metricTrend(data, scrum, 'scopeChange'), [data, scrum]);
+  const scrumBoxTrends = useMemo(() => boxTrends(data, scrum, SCRUM_BOXES), [data, scrum]);
+  const kanbanBoxTrends = useMemo(() => boxTrends(data, kanban, KANBAN_BOXES), [data, kanban]);
   const single = squads.length === 1 ? squads[0] : null;
+
+  // Mixed scope → one team type at a time; a single type (or one squad) just shows its own boxes
+  const both = scrum.length > 0 && kanban.length > 0;
+  const [view, setView] = useState<TeamType>('scrum');
+  useEffect(() => {
+    if (!scrum.length && kanban.length) setView('kanban');
+    if (!kanban.length && scrum.length) setView('scrum');
+  }, [scrum.length, kanban.length]);
+  const showScrum = scrum.length > 0 && (!both || view === 'scrum');
+  const showKanban = kanban.length > 0 && (!both || view === 'kanban');
   const sprints = useMemo(
     () =>
       single && single.teamType === 'scrum'
@@ -97,17 +154,28 @@ export function Predictability() {
 
   return (
     <>
-      <PageHeader title="Predictability" subtitle={`${label} · can we forecast what we will deliver? · last ${period} days`} />
+      <PageHeader
+        title="Predictability"
+        subtitle={`${label} · can we forecast what we will deliver? · last ${period} days`}
+        actions={
+          both ? (
+            <Segmented
+              ariaLabel="Team type"
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'scrum', label: `Scrum (${scrum.length})` },
+                { value: 'kanban', label: `Kanban (${kanban.length})` },
+              ]}
+            />
+          ) : undefined
+        }
+      />
 
-      {scrum.length > 0 && (
+      {showScrum && (
         <>
           <h3 className="mb-3 text-label-md uppercase text-on-surface-variant">Scrum squads ({scrum.length})</h3>
-          <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-            <KpiCard metricId="sayDo" sc={scScrum} trend={sayDoTrend.map((t) => t.value)} icon={<MdOutlineAnalytics />} periodLabel={pl} />
-            <KpiCard metricId="scopeChange" sc={scScrum} trend={scopeTrend.map((t) => t.value)} icon={<MdOutlineShuffle />} periodLabel={pl} />
-            <KpiCard metricId="velocityCv" sc={scScrum} icon={<MdOutlineWaves />} periodLabel={pl} />
-            <KpiCard metricId="goalHitRate" sc={scScrum} icon={<MdOutlineFlag />} periodLabel={pl} />
-          </div>
+          <KpiRow boxes={SCRUM_BOXES} sc={scScrum} trends={scrumBoxTrends} periodLabel={pl} />
 
           <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
             <Card>
@@ -192,17 +260,14 @@ export function Predictability() {
         </>
       )}
 
-      {kanban.length > 0 && (
+      {showKanban && (
         <>
           <h3 className="mb-3 text-label-md uppercase text-on-surface-variant">Kanban squads ({kanban.length})</h3>
           <p className="mb-4 max-w-3xl text-body-sm text-on-surface-variant">
             Kanban squads don’t commit to sprints, so predictability is read from how stable weekly throughput is. Stable throughput is what makes
             probabilistic forecasting (e.g. Monte Carlo “when will it be done?”) trustworthy.
           </p>
-          <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-            <KpiCard metricId="throughputCv" sc={scKanban} trend={kanbanTrend} icon={<MdOutlineWaves />} periodLabel={pl} />
-            <KpiCard metricId="throughput" sc={scKanban} icon={<MdOutlineAnalytics />} periodLabel={pl} />
-          </div>
+          <KpiRow boxes={KANBAN_BOXES} sc={scKanban} trends={kanbanBoxTrends} periodLabel={pl} />
           <Card className="overflow-hidden">
             <CardHeader title="Kanban squad breakdown" subtitle={`Sparkline: items finished per week, last ${Math.round(period / 7)} weeks`} />
             <SortableTable

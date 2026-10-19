@@ -56,11 +56,26 @@ export interface Initiative {
 
 export type WorkItemType = 'story' | 'bug' | 'task';
 
+/**
+ * Development category — where effort goes (investment mix). Independent of issue type:
+ * in Jira this comes from a "Work category" field or label, mapped by the source.
+ */
+export type WorkCategory = 'feature' | 'techDebt' | 'maintenance' | 'defect';
+
+/** Fixed display order — also the categorical colour order. */
+export const WORK_CATEGORIES: { id: WorkCategory; label: string }[] = [
+  { id: 'feature', label: 'New features' },
+  { id: 'techDebt', label: 'Tech debt' },
+  { id: 'maintenance', label: 'Maintenance' },
+  { id: 'defect', label: 'Defects' },
+];
+
 export interface WorkItem {
   /** Jira issue key */
   key: string;
   squadId: string;
   type: WorkItemType;
+  category: WorkCategory;
   summary: string;
   storyPoints: number | null;
   initiativeId: string | null;
@@ -94,6 +109,34 @@ export interface Sprint {
   goalMet: boolean;
 }
 
+/** Squad health check dimensions (after the Spotify squad health check model). */
+export const PULSE_DIMENSIONS = [
+  { id: 'value', label: 'Delivering value' },
+  { id: 'release', label: 'Easy to release' },
+  { id: 'codebase', label: 'Health of codebase' },
+  { id: 'speed', label: 'Speed' },
+  { id: 'process', label: 'Suitable process' },
+  { id: 'mission', label: 'Mission' },
+  { id: 'fun', label: 'Fun' },
+  { id: 'learning', label: 'Learning' },
+  { id: 'support', label: 'Support' },
+  { id: 'autonomy', label: 'Pawns or players' },
+] as const;
+
+export type PulseDimension = (typeof PULSE_DIMENSIONS)[number]['id'];
+
+/**
+ * One pulse check (squad health check survey) — aggregated per squad, never per person.
+ * Scores are the mean response on a 1–5 scale.
+ */
+export interface PulseCheck {
+  id: string;
+  squadId: string;
+  date: ISODate;
+  respondents: number;
+  scores: Record<PulseDimension, number>;
+}
+
 export interface Dataset {
   /** Snapshot timestamp — every "current" metric is relative to this, not wall-clock time. */
   asOf: ISODate;
@@ -105,4 +148,5 @@ export interface Dataset {
   initiatives: Initiative[];
   workItems: WorkItem[];
   sprints: Sprint[];
+  pulseChecks: PulseCheck[];
 }

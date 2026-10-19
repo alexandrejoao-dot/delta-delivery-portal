@@ -192,9 +192,9 @@ export function TeamTypeTag({ type }: { type: 'scrum' | 'kanban' }) {
 
 export function InfoTip({ text }: { text: string }) {
   return (
-    <span className="group relative inline-flex align-middle">
+    <span className="group/tip relative inline-flex align-middle" onClick={(e) => e.stopPropagation()}>
       <MdInfoOutline className="text-[15px] text-outline" aria-label={text} tabIndex={0} />
-      <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-1 hidden w-64 -translate-x-1/2 rounded-md border border-outline-variant bg-white p-2.5 text-left text-[12px] font-normal normal-case leading-snug tracking-normal text-on-surface-variant shadow-[0_4px_12px_-2px_rgb(0_0_0/0.12)] group-hover:block group-focus-within:block">
+      <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-1 hidden w-64 -translate-x-1/2 rounded-md border border-outline-variant bg-white p-2.5 text-left text-[12px] font-normal normal-case leading-snug tracking-normal text-on-surface-variant shadow-[0_4px_12px_-2px_rgb(0_0_0/0.12)] group-hover/tip:block group-focus-within/tip:block">
         {text}
       </span>
     </span>
@@ -210,10 +210,10 @@ export function EmptyState({ title, body }: { title: string; body?: string }) {
   );
 }
 
-export function MiniBar({ value, status }: { value: number; status: Status }) {
+export function MiniBar({ value, status, className = 'w-16' }: { value: number; status: Status; className?: string }) {
   const color = status === 'good' ? 'bg-good' : status === 'watch' ? 'bg-warn-dot' : status === 'attention' ? 'bg-bad-dot' : 'bg-series-1';
   return (
-    <div className="h-1 w-16 overflow-hidden rounded-full bg-surface-container-high">
+    <div className={cx('h-1 overflow-hidden rounded-full bg-surface-container-high', className)}>
       <div className={cx('h-full rounded-full', color)} style={{ width: `${Math.max(0, Math.min(1, value)) * 100}%` }} />
     </div>
   );

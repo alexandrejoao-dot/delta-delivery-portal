@@ -20,6 +20,7 @@ export function DataSources() {
     ['Initiatives', data.initiatives.length],
     ['Work items', data.workItems.length],
     ['Sprints', data.sprints.length],
+    ['Pulse checks', data.pulseChecks.length],
   ] as const;
   return (
     <>

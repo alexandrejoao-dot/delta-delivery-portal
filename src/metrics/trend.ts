@@ -17,6 +17,7 @@ export const TREND_DEFAULTS: Partial<Record<MetricId, TrendOptions>> = {
   velocity: { points: 12, stepDays: 14, windowDays: 14 },
   velocityCv: { points: 8, stepDays: 14, windowDays: 84 },
   throughputCv: { points: 12, stepDays: 14, windowDays: 56 },
+  pulseScore: { points: 7, stepDays: 28, windowDays: 28 }, // one monthly pulse per window
 };
 const FALLBACK: TrendOptions = { points: 12, stepDays: 14, windowDays: 28 };
 
@@ -26,7 +27,7 @@ export function metricTrend(data: Dataset, squads: Squad[], id: MetricId, opts: 
   const asOfMs = Date.parse(data.asOf);
   return Array.from({ length: o.points }, (_, i) => {
     const endMs = asOfMs - (o.points - 1 - i) * o.stepDays * DAY_MS;
-    const v = computeValues(data, squads, { startMs: endMs - o.windowDays * DAY_MS, endMs: endMs - 1, days: o.windowDays });
+    const v = computeValues(data, squads, { startMs: endMs - o.windowDays * DAY_MS, endMs: endMs - 1, days: o.windowDays }, [id]);
     return { endMs, value: v[id] };
   });
 }

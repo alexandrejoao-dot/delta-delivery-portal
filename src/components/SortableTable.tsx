@@ -22,10 +22,12 @@ interface Props<T> {
   dense?: boolean;
   /** Optional scroll height (sticky header kicks in) */
   maxHeight?: number;
+  /** Wide tables: wrap long headers onto two lines and tighten horizontal padding so they fit without scrolling */
+  fitWidth?: boolean;
 }
 
 /** Data table with sticky header and sortable columns (NaN / missing values always sort last). */
-export function SortableTable<T>({ rows, columns, rowKey, onRowClick, initialSort, minWidth = 900, dense, maxHeight }: Props<T>) {
+export function SortableTable<T>({ rows, columns, rowKey, onRowClick, initialSort, minWidth = 900, dense, maxHeight, fitWidth }: Props<T>) {
   const [sort, setSort] = useState(initialSort ?? null);
   const sorted = useMemo(() => {
     if (!sort) return rows;
@@ -46,7 +48,7 @@ export function SortableTable<T>({ rows, columns, rowKey, onRowClick, initialSor
   const toggle = (key: string) =>
     setSort((s) => (s?.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' }));
 
-  const pad = dense ? 'px-4 py-2.5' : 'px-4 py-3.5';
+  const pad = cx(fitWidth ? 'px-3' : 'px-4', dense ? 'py-2.5' : 'py-3.5');
 
   return (
     <div className="w-full overflow-auto" style={maxHeight ? { maxHeight } : undefined}>
@@ -60,15 +62,16 @@ export function SortableTable<T>({ rows, columns, rowKey, onRowClick, initialSor
                   key={c.key}
                   scope="col"
                   className={cx(
-                    'sticky top-0 z-10 whitespace-nowrap border-b-2 border-surface-container-highest bg-surface-container-lowest text-label-md font-semibold text-on-surface-variant',
+                    'sticky top-0 z-10 border-b-2 border-surface-container-highest bg-surface-container-lowest text-label-md font-semibold text-on-surface-variant',
                     pad,
+                    fitWidth ? 'align-bottom' : 'whitespace-nowrap',
                     c.align === 'right' && 'text-right',
                   )}
                   aria-sort={active ? (sort!.dir === 'asc' ? 'ascending' : 'descending') : undefined}
                 >
                   <span className={cx('inline-flex items-center gap-1', c.align === 'right' && 'flex-row-reverse')}>
                     {c.sortValue ? (
-                      <button className="group inline-flex items-center gap-1 hover:text-on-surface" onClick={() => toggle(c.key)}>
+                      <button className="group inline-flex items-center gap-1 text-left hover:text-on-surface" onClick={() => toggle(c.key)}>
                         {c.header}
                         {active ? (
                           sort!.dir === 'asc' ? (

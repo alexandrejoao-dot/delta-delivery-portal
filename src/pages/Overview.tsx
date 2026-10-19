@@ -1,13 +1,17 @@
-import { useMemo } from 'react';
-import { MdOutlineAnalytics, MdOutlineBugReport, MdOutlineSpeed, MdOutlineTimer } from 'react-icons/md';
+import { useEffect, useMemo, useState } from 'react';
+import { MdFilterList, MdOutlineDonutSmall, MdOutlineMonitorHeart, MdOutlineSentimentSatisfied, MdOutlineTimer } from 'react-icons/md';
+import { CategoryMixCard } from '../components/CategoryMixCard';
+import { HighlightsCard } from '../components/HighlightsCard';
 import { InsightsPanel } from '../components/InsightsPanel';
 import { KpiCard } from '../components/KpiCard';
-import { LineChart } from '../components/charts/LineChart';
 import { SquadMatrix, useSquadRows } from '../components/SquadMatrix';
-import { Card, CardHeader, EmptyState, PageHeader, StatusBadge } from '../components/ui';
-import { shortDate } from '../lib/format';
+import { Card, CardHeader, cx, EmptyState, PageHeader, StatusBadge } from '../components/ui';
+import { formatMetric } from '../lib/format';
 import { Link } from '../lib/router';
 import { generateInsights } from '../metrics/insights';
+import { categoryMixFor } from '../metrics/investment';
+import { windows } from '../metrics/period';
+import { pulseDimensions, pulsesFor } from '../metrics/pulse';
 import { scorecard, type Health } from '../metrics/scorecard';
 import { metricTrend } from '../metrics/trend';
 import { useScopedSquads } from '../state/filters';
@@ -15,20 +19,42 @@ import { useScopedSquads } from '../state/filters';
 export function Overview() {
   const { data, squads, period, label, scope } = useScopedSquads();
   const sc = useMemo(() => scorecard(data, squads, period), [data, squads, period]);
-  const hasScrum = squads.some((s) => s.teamType === 'scrum');
-  const predId = hasScrum ? 'sayDo' : 'throughputCv';
   const trends = useMemo(
     () => ({
-      pred: metricTrend(data, squads, predId),
-      ct: metricTrend(data, squads, 'cycleP85'),
-      tp: metricTrend(data, squads, 'throughput'),
-      bug: metricTrend(data, squads, 'bugRatio'),
+      health: metricTrend(data, squads, 'healthIndex'),
+      pulse: metricTrend(data, squads, 'pulseScore'),
+      lead: metricTrend(data, squads, 'leadP85'),
     }),
-    [data, squads, predId],
+    [data, squads],
   );
+  const extra = useMemo(() => {
+    const w = windows(data.asOf, period);
+    return {
+      lowestPulse: pulseDimensions(pulsesFor(data, squads), w.current).slice(0, 2),
+      mix: categoryMixFor(data, squads, w.current),
+      mixPrev: categoryMixFor(data, squads, w.previous),
+    };
+  }, [data, squads, period]);
   const rows = useSquadRows(data, squads, period);
+  const [signalFilter, setSignalFilter] = useState<Health | null>(null);
+  // A new scope or period is a new question — start unfiltered
+  useEffect(() => setSignalFilter(null), [squads, period]);
   const insights = useMemo(() => generateInsights(data, squads, period), [data, squads, period]);
+  const indexCounts = rows.reduce<Record<string, number>>((acc, r) => {
+    const st = r.sc.status.healthIndex ?? 'none';
+    return { ...acc, [st]: (acc[st] ?? 0) + 1 };
+  }, { good: 0, watch: 0, attention: 0 });
   const counts = rows.reduce<Record<Health, number>>((acc, r) => ({ ...acc, [r.health]: acc[r.health] + 1 }), { good: 0, watch: 0, attention: 0 });
+
+  const showMatrix = scope.kind !== 'squad';
+  const toggleSignal = (h: Health) => {
+    const next = signalFilter === h ? null : h;
+    setSignalFilter(next);
+    if (next) {
+      const smooth = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      requestAnimationFrame(() => document.getElementById('squad-matrix')?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' }));
+    }
+  };
 
   if (!squads.length) return <EmptyState title="No squads in this scope" body="Pick a different scope in the top bar." />;
 
@@ -43,40 +69,95 @@ export function Overview() {
       />
 
       <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard metricId={predId} sc={sc} trend={trends.pred.map((t) => t.value)} icon={<MdOutlineAnalytics />} periodLabel={periodLabel} />
-        <KpiCard metricId="cycleP85" sc={sc} trend={trends.ct.map((t) => t.value)} icon={<MdOutlineTimer />} periodLabel={periodLabel} />
-        <KpiCard metricId="throughput" sc={sc} trend={trends.tp.map((t) => t.value)} icon={<MdOutlineSpeed />} periodLabel={periodLabel} />
-        <KpiCard metricId="bugRatio" sc={sc} trend={trends.bug.map((t) => t.value)} icon={<MdOutlineBugReport />} periodLabel={periodLabel} />
+        <KpiCard
+          metricId="healthIndex"
+          to="/predictability"
+          toLabel="Open Predictability"
+          sc={sc}
+          trend={trends.health.map((t) => t.value)}
+          icon={<MdOutlineMonitorHeart />}
+          periodLabel={periodLabel}
+          footer={
+            squads.length > 1 ? (
+              <>
+                <span className="font-semibold text-on-surface">{indexCounts.good}</span> of {squads.length} squads on track ·{' '}
+                <span className="font-semibold text-on-surface">{indexCounts.attention}</span> need attention
+              </>
+            ) : (
+              'Completion, cycle time, stability, scope, lead time and pulse — equal weight'
+            )
+          }
+        />
+        <KpiCard
+          metricId="pulseScore"
+          sc={sc}
+          trend={trends.pulse.map((t) => t.value)}
+          icon={<MdOutlineSentimentSatisfied />}
+          periodLabel={periodLabel}
+          footer={
+            extra.lowestPulse.length ? (
+              <>
+                Lowest:{' '}
+                {extra.lowestPulse.map((d, i) => (
+                  <span key={d.id}>
+                    {i > 0 && ' · '}
+                    {d.label} <span className="tabular font-semibold text-on-surface">{d.score.toFixed(1)}</span>
+                  </span>
+                ))}
+              </>
+            ) : (
+              'No pulse check in this period'
+            )
+          }
+        />
+        <KpiCard
+          metricId="leadP85"
+          label="Lead time (85th pct)"
+          sc={sc}
+          trend={trends.lead.map((t) => t.value)}
+          icon={<MdOutlineTimer />}
+          periodLabel={periodLabel}
+          footer={
+            <>
+              Of which in progress (cycle time, 85th pct):{' '}
+              <span className="tabular font-semibold text-on-surface">{formatMetric('cycleP85', sc.current.cycleP85, true)}</span>
+            </>
+          }
+        />
+        <CategoryMixCard current={extra.mix} previous={extra.mixPrev} periodLabel={periodLabel} icon={<MdOutlineDonutSmall />} />
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader
-            title={hasScrum ? 'Commitment reliability by sprint' : 'Throughput variability'}
-            subtitle={hasScrum ? 'Say/Do across Scrum squads in scope, per 2-week sprint (points-weighted)' : 'Rolling 8-week variability of weekly throughput'}
-          />
-          <div className="p-5">
-            <LineChart
-              ariaLabel="Predictability trend"
-              xLabels={trends.pred.map((t) => shortDate(t.endMs))}
-              series={[{ id: 'p', label: hasScrum ? 'Say/Do' : 'Throughput variability', values: trends.pred.map((t) => t.value) }]}
-              yFormat={(v) => `${Math.round(v * 100)}%`}
-              yMin={hasScrum ? 0.4 : 0}
-              yMax={hasScrum ? 1 : undefined}
-              target={hasScrum ? { value: 0.8, label: 'Target 80%' } : { value: 0.35, label: 'Stable ≤ 35%' }}
-              area
-            />
-          </div>
-        </Card>
+        <HighlightsCard data={data} squads={squads} period={period} />
         <Card>
           <CardHeader title="Signals at a glance" subtitle={`${squads.length} squads · ${period} days`} />
           <div className="flex flex-col gap-3 p-5">
-            {(['attention', 'watch', 'good'] as Health[]).map((h) => (
-              <div key={h} className="flex items-center justify-between rounded-md border border-surface-container px-4 py-3">
-                <StatusBadge status={h} />
-                <span className="text-headline-md tabular text-on-surface">{counts[h]}</span>
-              </div>
-            ))}
+            {(['attention', 'watch', 'good'] as Health[]).map((h) => {
+              const active = signalFilter === h;
+              const clickable = showMatrix && counts[h] > 0;
+              return (
+                <button
+                  key={h}
+                  type="button"
+                  disabled={!clickable}
+                  aria-pressed={active}
+                  title={clickable ? (active ? 'Show all squads' : 'Show these squads in the matrix below') : undefined}
+                  onClick={() => toggleSignal(h)}
+                  className={cx(
+                    'flex items-center justify-between rounded-md border px-4 py-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-series-1/40',
+                    active ? 'border-primary bg-surface-container-low' : 'border-surface-container',
+                    clickable && !active && 'hover:border-outline-variant hover:bg-surface-container-low',
+                    !clickable && 'cursor-default',
+                  )}
+                >
+                  <StatusBadge status={h} />
+                  <span className="flex items-center gap-2">
+                    <span className="text-headline-md tabular text-on-surface">{counts[h]}</span>
+                    {clickable && <MdFilterList className={cx('text-[18px]', active ? 'text-primary' : 'text-outline')} aria-hidden />}
+                  </span>
+                </button>
+              );
+            })}
             <p className="mt-1 text-body-sm text-on-surface-variant">
               Signals are derived from thresholds in the{' '}
               <Link to="/metrics" className="font-medium text-series-1 hover:underline">
@@ -88,9 +169,16 @@ export function Overview() {
         </Card>
       </div>
 
-      {scope.kind !== 'squad' && (
+      {showMatrix && (
         <div className="mb-8">
-          <SquadMatrix data={data} squads={squads} period={period} />
+          <SquadMatrix
+            id="squad-matrix"
+            data={data}
+            squads={squads}
+            period={period}
+            signalFilter={signalFilter}
+            onClearFilter={() => setSignalFilter(null)}
+          />
         </div>
       )}
 

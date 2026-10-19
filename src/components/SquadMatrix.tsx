@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { MdDownload } from 'react-icons/md';
+import { MdClose, MdDownload } from 'react-icons/md';
 import type { Dataset, Squad } from '../data/model';
 import { downloadCsv, formatMetric } from '../lib/format';
 import { navigate } from '../lib/router';
@@ -7,7 +7,7 @@ import { METRICS, type MetricId } from '../metrics/catalogue';
 import type { PeriodDays } from '../metrics/period';
 import { scorecard, squadHealth, type Health, type Scorecard } from '../metrics/scorecard';
 import { SortableTable, type Column } from './SortableTable';
-import { Button, cx, SquadAvatar, StatusBadge, TeamTypeTag } from './ui';
+import { Button, cx, MiniBar, SquadAvatar, StatusBadge, TeamTypeTag } from './ui';
 
 interface Row {
   squad: Squad;
@@ -51,11 +51,27 @@ function Cell({ row, id }: { row: Row; id: MetricId }) {
   );
 }
 
-/** Predictability column shows the metric that applies to the squad's way of working. */
-const predictabilityMetric = (r: Row): MetricId => (r.squad.teamType === 'scrum' ? 'sayDo' : 'throughputCv');
+/** Where Scrum and Kanban are measured differently, the column shows the metric for the squad's way of working. */
+const stabilityMetric = (r: Row): MetricId => (r.squad.teamType === 'scrum' ? 'velocityCv' : 'throughputCv');
 
-export function SquadMatrix({ data, squads, period, title = 'Squad health matrix' }: { data: Dataset; squads: Squad[]; period: PeriodDays; title?: string }) {
-  const rows = useSquadRows(data, squads, period);
+const Sub = ({ children }: { children: string }) => <div className="whitespace-nowrap text-[11px] text-on-surface-variant">{children}</div>;
+
+interface MatrixProps {
+  data: Dataset;
+  squads: Squad[];
+  period: PeriodDays;
+  title?: string;
+  /** Show only squads with this signal (e.g. from "Signals at a glance") */
+  signalFilter?: Health | null;
+  onClearFilter?: () => void;
+  id?: string;
+}
+
+const filterLabel: Record<Health, string> = { attention: 'Needs attention', watch: 'Watch', good: 'On track' };
+
+export function SquadMatrix({ data, squads, period, title = 'Squad health matrix', signalFilter, onClearFilter, id }: MatrixProps) {
+  const allRows = useSquadRows(data, squads, period);
+  const rows = signalFilter ? allRows.filter((r) => r.health === signalFilter) : allRows;
 
   const columns: Column<Row>[] = [
     {
@@ -65,11 +81,11 @@ export function SquadMatrix({ data, squads, period, title = 'Squad health matrix
       render: (r) => (
         <div className="flex items-center gap-3">
           <SquadAvatar name={r.squad.name} index={r.index} />
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-[200px]">
             <div className="flex items-center gap-2 font-semibold">
               {r.squad.name} <TeamTypeTag type={r.squad.teamType} />
             </div>
-            <div className="truncate text-[12px] text-on-surface-variant">
+            <div className="truncate text-[12px] text-on-surface-variant" title={`${r.domain} · ${r.dl}`}>
               {r.domain} · {r.dl}
             </div>
           </div>
@@ -88,61 +104,69 @@ export function SquadMatrix({ data, squads, period, title = 'Squad health matrix
       ),
     },
     {
-      key: 'pred',
-      header: 'Predictability',
-      tip: 'Scrum squads: Say/Do (higher is better). Kanban squads: throughput variability (lower is better).',
-      sortValue: (r) => (r.squad.teamType === 'scrum' ? r.sc.current.sayDo : 1 - r.sc.current.throughputCv),
+      key: 'hi',
+      header: 'Health index',
+      tip: `${METRICS.healthIndex.description} (0–100)`,
+      sortValue: (r) => r.sc.current.healthIndex,
+      render: (r) => (
+        <div className="flex items-center gap-2">
+          <Cell row={r} id="healthIndex" />
+          <MiniBar value={r.sc.current.healthIndex / 100} status={r.sc.status.healthIndex ?? 'none'} className="w-10" />
+        </div>
+      ),
+    },
+    {
+      key: 'completion',
+      header: 'Completion ratio',
+      tip: `Say/Do — ${METRICS.sayDo.description} Scrum only — Kanban has no sprint commitment.`,
+      sortValue: (r) => (r.squad.teamType === 'scrum' ? r.sc.current.sayDo : NaN),
+      render: (r) => (r.squad.teamType === 'scrum' ? <Cell row={r} id="sayDo" /> : <span className="text-outline">n/a</span>),
+    },
+    {
+      key: 'ct',
+      header: 'Cycle time',
+      tip: METRICS.cycleP85.description,
+      sortValue: (r) => r.sc.current.cycleP85,
       render: (r) => (
         <div>
-          <Cell row={r} id={predictabilityMetric(r)} />
-          <div className="text-[11px] text-on-surface-variant">{r.squad.teamType === 'scrum' ? 'say/do' : 'variability'}</div>
+          <Cell row={r} id="cycleP85" />
+          <Sub>85th pct</Sub>
+        </div>
+      ),
+    },
+    {
+      key: 'stability',
+      header: 'Stability',
+      tip: 'Variability (lower is steadier). Scrum: velocity sprint to sprint. Kanban: weekly throughput.',
+      sortValue: (r) => r.sc.current[stabilityMetric(r)],
+      render: (r) => (
+        <div>
+          <Cell row={r} id={stabilityMetric(r)} />
+          <Sub>{r.squad.teamType === 'scrum' ? 'velocity' : 'throughput'}</Sub>
         </div>
       ),
     },
     {
       key: 'scope',
-      header: 'Scope change',
-      tip: METRICS.scopeChange.description,
-      sortValue: (r) => r.sc.current.scopeChange,
+      header: 'Scope volatility',
+      tip: `${METRICS.scopeChange.description} Scrum only — Kanban has no fixed commitment.`,
+      sortValue: (r) => (r.squad.teamType === 'scrum' ? r.sc.current.scopeChange : NaN),
       render: (r) => (r.squad.teamType === 'scrum' ? <Cell row={r} id="scopeChange" /> : <span className="text-outline">n/a</span>),
     },
     {
-      key: 'tp',
-      header: 'Throughput',
-      tip: `${METRICS.throughput.description} ${METRICS.throughput.caveat}`,
-      sortValue: (r) => r.sc.current.throughput,
+      key: 'forecast',
+      header: 'Delivery forecast',
+      tip: `${METRICS.deliveryForecast.description} ${METRICS.deliveryForecast.caveat}`,
+      sortValue: (r) => r.sc.current.deliveryForecast,
       render: (r) => (
-        <span className="tabular font-medium">
-          {formatMetric('throughput', r.sc.current.throughput, true)}
-          <span className="text-[11px] text-on-surface-variant"> /wk</span>
-        </span>
+        <div>
+          <span className="tabular font-medium">
+            {Number.isFinite(r.sc.current.deliveryForecast) ? `≥ ${r.sc.current.deliveryForecast}` : '—'}
+            <span className="text-[11px] text-on-surface-variant"> items</span>
+          </span>
+          <Sub>2 wks · 85%</Sub>
+        </div>
       ),
-    },
-    {
-      key: 'ct',
-      header: 'Cycle p85',
-      tip: METRICS.cycleP85.description,
-      sortValue: (r) => r.sc.current.cycleP85,
-      render: (r) => <Cell row={r} id="cycleP85" />,
-    },
-    {
-      key: 'age',
-      header: 'Ageing WIP',
-      tip: METRICS.ageingWipShare.description,
-      sortValue: (r) => r.sc.current.ageingWipShare,
-      render: (r) => (
-        <span>
-          <Cell row={r} id="ageingWipShare" />
-          <span className="text-[11px] text-on-surface-variant"> of {r.sc.current.wip}</span>
-        </span>
-      ),
-    },
-    {
-      key: 'bug',
-      header: 'Bug ratio',
-      tip: METRICS.bugRatio.description,
-      sortValue: (r) => r.sc.current.bugRatio,
-      render: (r) => <Cell row={r} id="bugRatio" />,
     },
   ];
 
@@ -154,25 +178,40 @@ export function SquadMatrix({ data, squads, period, title = 'Squad health matrix
         domain: r.domain,
         delivery_lead: r.dl,
         team_type: r.squad.teamType,
-        say_do: r.sc.current.sayDo,
-        scope_change: r.sc.current.scopeChange,
-        throughput_per_week: r.sc.current.throughput,
-        throughput_cv: r.sc.current.throughputCv,
-        cycle_time_p85_days: r.sc.current.cycleP85,
-        ageing_wip_share: r.sc.current.ageingWipShare,
-        bug_ratio: r.sc.current.bugRatio,
         signal: r.health,
+        health_index: r.sc.current.healthIndex,
+        completion_ratio: r.squad.teamType === 'scrum' ? r.sc.current.sayDo : '',
+        cycle_time_p85_days: r.sc.current.cycleP85,
+        stability_cv: r.sc.current[stabilityMetric(r)],
+        stability_metric: stabilityMetric(r),
+        scope_volatility: r.squad.teamType === 'scrum' ? r.sc.current.scopeChange : '',
+        forecast_items_2wk_p85: r.sc.current.deliveryForecast,
       })),
     );
 
   return (
-    <section className="overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest">
+    <section id={id} className="scroll-mt-24 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest">
       <div className="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-headline-sm text-on-surface">{title}</h3>
           <p className="mt-0.5 text-body-sm text-on-surface-variant">
             Last {period} days · click a squad for its detail. Signals start conversations — they are not rankings.
           </p>
+          {signalFilter && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-body-sm text-on-surface-variant" role="status">
+              <span>Showing</span>
+              <StatusBadge status={signalFilter} size="sm" label={filterLabel[signalFilter]} />
+              <span>
+                {rows.length} of {allRows.length} squads
+              </span>
+              {onClearFilter && (
+                <button type="button" onClick={onClearFilter} className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-label-md text-series-1 hover:bg-surface-container-low">
+                  <MdClose className="text-[14px]" aria-hidden />
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
         </div>
         <Button icon={<MdDownload />} onClick={exportCsv}>
           Export CSV
@@ -184,6 +223,7 @@ export function SquadMatrix({ data, squads, period, title = 'Squad health matrix
         rowKey={(r) => r.squad.id}
         onRowClick={(r) => navigate(`/squads/${r.squad.id}`)}
         initialSort={{ key: 'health', dir: 'asc' }}
+        fitWidth
       />
     </section>
   );

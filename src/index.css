@@ -51,6 +51,7 @@
   --color-series-1: #2a78d6;
   --color-series-2: #eb6834;
   --color-series-3: #1baf7a;
+  --color-series-4: #eda100;
 
   --text-display-lg: 36px;
   --text-display-lg--line-height: 44px;
@@ -102,4 +103,10 @@
     -webkit-appearance: none;
     appearance: none;
   }
+}
+
+/* Highlights carousel — slide entrance (only applied under motion-safe) */
+@keyframes highlight-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
 }

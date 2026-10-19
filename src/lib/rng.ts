@@ -1,4 +1,4 @@
-/** Small deterministic PRNG (mulberry32) so dummy data is identical on every load. */
+/** Small deterministic PRNG (mulberry32) — dummy data and Monte Carlo forecasts are identical on every load. */
 export function createRng(seed: number) {
   let a = seed >>> 0;
   const next = () => {

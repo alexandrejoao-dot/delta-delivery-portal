@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { MdSearch } from 'react-icons/md';
 import { Card, PageHeader, StatusBadge, TeamTypeTag } from '../components/ui';
 import { formatValue } from '../lib/format';
-import { METRIC_LIST, type MetricCategory, type MetricDefinition } from '../metrics/catalogue';
+import { METRIC_LIST, scoreAnchors, type MetricCategory, type MetricDefinition } from '../metrics/catalogue';
+import { HEALTH_INDEX_INPUTS } from '../metrics/scorecard';
 
-const categories: MetricCategory[] = ['Predictability', 'Flow', 'Quality'];
+const categories: MetricCategory[] = ['Health', 'Predictability', 'Flow', 'Quality', 'Investment', 'Forecast'];
 
 function Thresholds({ m }: { m: MetricDefinition }) {
   if (!m.thresholds) return <span className="text-body-sm text-on-surface-variant">Context metric — no target (used for trends and forecasting, not judgement)</span>;
@@ -18,6 +19,23 @@ function Thresholds({ m }: { m: MetricDefinition }) {
       <StatusBadge size="sm" status="watch" label={`Watch ${w}`} />
       <StatusBadge size="sm" status="attention" label={`Attention ${a}`} />
     </div>
+  );
+}
+
+const isIndexInput = (m: MetricDefinition) => Object.values(HEALTH_INDEX_INPUTS).some((ids) => ids.includes(m.id));
+
+/** How the metric is scored for the health index — makes the index traceable to its inputs. */
+function IndexScore({ m }: { m: MetricDefinition }) {
+  const a = scoreAnchors(m.id);
+  if (!a) return null;
+  const f = (v: number) => formatValue(v, m.unit, { compact: true });
+  const better = m.direction === 'higher' ? '≥' : '≤';
+  const worse = m.direction === 'higher' ? '≤' : '≥';
+  return (
+    <span className="text-on-surface">
+      100 at {better} {f(a.full)} · 50 at {f(a.half)} · 0 at {worse} {f(a.zero)}
+      <span className="text-on-surface-variant"> — linear in between, equal weight</span>
+    </span>
   );
 }
 
@@ -71,6 +89,14 @@ export function MetricCatalogue() {
                     <dd>
                       <Thresholds m={m} />
                     </dd>
+                    {isIndexInput(m) && (
+                      <>
+                        <dt className="text-label-md uppercase text-on-surface-variant">Health index</dt>
+                        <dd>
+                          <IndexScore m={m} />
+                        </dd>
+                      </>
+                    )}
                   </dl>
                   {m.caveat && (
                     <p className="mt-3 rounded-md border-l-4 border-tertiary-fixed-dim bg-tertiary-fixed/25 px-3 py-2 text-body-sm text-on-surface">

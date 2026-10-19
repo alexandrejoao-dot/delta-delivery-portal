@@ -1,10 +1,13 @@
 import type { Dataset, Squad, TeamType } from '../data/model';
-import { evaluate, METRICS, type MetricId, type Status } from './catalogue';
+import { evaluate, metricScore, METRICS, type MetricId, type Status } from './catalogue';
 import { ageingWip, cycleTimePercentile, leadTimes, throughputPerWeek, throughputVariability } from './flow';
+import { deliveryForecast, forecastAccuracy } from './forecast';
 import { windows, type PeriodDays, type Window } from './period';
 import { avgVelocity, goalHitRate, sayDo, scopeChange, sprintsEndingIn, velocityVariability } from './predictability';
+import { categoryMix } from './investment';
+import { pulseScore } from './pulse';
 import { bugRatio } from './quality';
-import { percentile } from './stats';
+import { mean, percentile } from './stats';
 
 export type MetricValues = Record<MetricId, number>;
 
@@ -18,8 +21,40 @@ export interface Scorecard {
 
 const median = (xs: number[]) => percentile(xs.filter(Number.isFinite), 50);
 
-/** All metric values for a group of squads over one window (pooled where pooling is valid). */
-export function computeValues(data: Dataset, squads: Squad[], w: Window): MetricValues {
+type DerivedId = 'healthIndex';
+type BaseValues = Omit<MetricValues, DerivedId>;
+
+/**
+ * All metric values for a group of squads over one window (pooled where pooling is valid).
+ * `need` limits the expensive metrics (Monte Carlo, health index) to the ones the caller uses;
+ * anything not needed comes back as NaN. Omit it to get everything.
+ */
+export function computeValues(data: Dataset, squads: Squad[], w: Window, need?: MetricId[]): MetricValues {
+  const base = baseValues(data, squads, w, need);
+  if (need && !need.includes('healthIndex')) return { ...base, healthIndex: NaN };
+  // Health index is per squad, then averaged, so each squad counts once
+  const perSquad = squads.map((s) =>
+    squadHealthIndex(squads.length === 1 ? base : baseValues(data, [s], w, HEALTH_INDEX_INPUTS[s.teamType]), s.teamType),
+  );
+  return { ...base, healthIndex: mean(perSquad.filter(Number.isFinite)) };
+}
+
+/** Health index inputs by team type — the matrix indicators plus lead time and pulse, equally weighted. */
+export const HEALTH_INDEX_INPUTS: Record<TeamType, MetricId[]> = {
+  scrum: ['sayDo', 'cycleP85', 'velocityCv', 'scopeChange', 'leadP85', 'pulseScore'],
+  kanban: ['cycleP85', 'throughputCv', 'leadP85', 'pulseScore'],
+};
+
+/** Below this many scorable inputs the index is not shown — too little to summarise. */
+export const MIN_HEALTH_INDEX_INPUTS = 3;
+
+/** 0–100: equal-weight mean of the squad's input scores (see `metricScore`). */
+export function squadHealthIndex(values: Partial<MetricValues>, teamType: TeamType): number {
+  const scores = HEALTH_INDEX_INPUTS[teamType].map((m) => metricScore(m, values[m] ?? NaN)).filter(Number.isFinite);
+  return scores.length >= MIN_HEALTH_INDEX_INPUTS ? mean(scores) : NaN;
+}
+
+function baseValues(data: Dataset, squads: Squad[], w: Window, need?: MetricId[]): BaseValues {
   const ids = new Set(squads.map((s) => s.id));
   const items = data.workItems.filter((i) => ids.has(i.squadId));
   const scrumIds = new Set(squads.filter((s) => s.teamType === 'scrum').map((s) => s.id));
@@ -29,28 +64,57 @@ export function computeValues(data: Dataset, squads: Squad[], w: Window): Metric
     w,
   );
   const isCurrent = w.endMs === Date.parse(data.asOf);
-  const ageing = ageingWip(items, data.asOf);
+  // WIP and ageing are measured at the end of the window, so past windows (deltas, trends) work too
+  let ageingMemo: ReturnType<typeof ageingWip> | undefined;
+  const ageing = () => (ageingMemo ??= ageingWip(items, new Date(w.endMs).toISOString()));
 
-  return {
-    sayDo: sayDo(sprints),
-    scopeChange: scopeChange(sprints),
-    velocity: squads.length === 1 ? avgVelocity(sprints) : NaN, // never aggregated across squads
-    velocityCv: median([...scrumIds].map((id) => velocityVariability(sprints.filter((s) => s.squadId === id)))),
-    goalHitRate: goalHitRate(sprints),
-    throughput: throughputPerWeek(items, w),
-    throughputCv: median(
-      kanbanSquads.map((s) => throughputVariability(items.filter((i) => i.squadId === s.id), w)),
-    ),
-    cycleP50: cycleTimePercentile(items, w, 50),
-    cycleP85: cycleTimePercentile(items, w, 85),
-    leadP85: percentile(leadTimes(items, w), 85),
-    wip: isCurrent ? ageing.wip.length : NaN,
-    ageingWipShare: isCurrent ? ageing.share : NaN,
-    bugRatio: bugRatio(items, w),
+  // Each metric is computed only if needed — trends ask for one metric at a time
+  const calc: { [K in keyof BaseValues]: () => number } = {
+    sayDo: () => sayDo(sprints),
+    scopeChange: () => scopeChange(sprints),
+    velocity: () => (squads.length === 1 ? avgVelocity(sprints) : NaN), // never aggregated across squads
+    velocityCv: () => median([...scrumIds].map((id) => velocityVariability(sprints.filter((s) => s.squadId === id)))),
+    goalHitRate: () => goalHitRate(sprints),
+    throughput: () => throughputPerWeek(items, w),
+    throughputCv: () => median(kanbanSquads.map((s) => throughputVariability(items.filter((i) => i.squadId === s.id), w))),
+    cycleP50: () => cycleTimePercentile(items, w, 50),
+    cycleP85: () => cycleTimePercentile(items, w, 85),
+    leadP85: () => percentile(leadTimes(items, w), 85),
+    wip: () => (isCurrent ? ageing().wip.length : NaN),
+    ageingWipShare: () => (ageing().wip.length ? ageing().share : NaN),
+    bugRatio: () => bugRatio(items, w),
+    pulseScore: () =>
+      pulseScore(
+        data.pulseChecks.filter((p) => ids.has(p.squadId)),
+        w,
+      ),
+    featureShare: () => categoryMix(items, w).feature,
+    deliveryForecast: () => deliveryForecast(items, w),
+    forecastAccuracy: () => forecastAccuracy(items, w),
   };
+  const out = {} as BaseValues;
+  for (const id of Object.keys(calc) as (keyof BaseValues)[]) out[id] = !need || need.includes(id) ? calc[id]() : NaN;
+  return out;
 }
 
+/**
+ * Scorecards are pure functions of (dataset, squads, period) and several views ask for the same ones
+ * (matrix, highlights, insights), so they're memoised per dataset. Datasets are never mutated.
+ */
+const cache = new WeakMap<Dataset, Map<string, Scorecard>>();
+
 export function scorecard(data: Dataset, squads: Squad[], period: PeriodDays): Scorecard {
+  const key = `${period}|${squads.map((s) => s.id).join(',')}`;
+  let byKey = cache.get(data);
+  if (!byKey) cache.set(data, (byKey = new Map()));
+  const hit = byKey.get(key);
+  if (hit) return hit;
+  const sc = buildScorecard(data, squads, period);
+  byKey.set(key, sc);
+  return sc;
+}
+
+function buildScorecard(data: Dataset, squads: Squad[], period: PeriodDays): Scorecard {
   const { current, previous } = windows(data.asOf, period);
   const cur = computeValues(data, squads, current);
   const prev = computeValues(data, squads, previous);
