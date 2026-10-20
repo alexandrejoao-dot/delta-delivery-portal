@@ -1,7 +1,7 @@
-# Sinal Performance Portal — delivery metrics POC
+# Delta Performance Portal — delivery metrics POC
 
 Central portal for delivery metrics across Global Platforms (squads → Delivery Leads → domains),
-built by the Insights & Performance team ("Sinal"). This is a **proof of concept on dummy data**;
+built by the Insights & Performance team. This is a **proof of concept on dummy data**;
 delivery metrics only. Engineering (DORA), Service & Ops, Risk & Security and Finance are
 placeholders in the nav.
 

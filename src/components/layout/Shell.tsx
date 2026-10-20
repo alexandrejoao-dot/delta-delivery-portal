@@ -68,12 +68,12 @@ function Sidebar({ path, collapsed, onToggle, onNavigate }: { path: string; coll
     <nav className={cx('flex h-full flex-col bg-primary text-body-sm text-primary-fixed transition-[width] duration-300', collapsed ? 'w-20' : 'w-[260px]')}>
       <div className={cx('flex items-center gap-3 border-b border-on-primary-fixed-variant/40 py-6', collapsed ? 'justify-center px-2' : 'px-5')}>
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-secondary-fixed text-[13px] font-bold text-primary">
-          S
+          D
         </div>
         {!collapsed && (
           <div className="min-w-0">
             <div className="truncate text-[16px] font-bold leading-6 text-on-primary">Performance Portal</div>
-            <div className="truncate text-label-sm text-primary-fixed-dim/70">Sinal · Insights & Performance</div>
+            <div className="truncate text-label-sm text-primary-fixed-dim/70">Delta · Insights & Performance</div>
           </div>
         )}
       </div>

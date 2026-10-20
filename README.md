@@ -1,4 +1,4 @@
-# Sinal Performance Portal (POC)
+# Delta Performance Portal (POC)
 
 A central place for delivery metrics across Global Platforms — Overview, Predictability, Flow,
 Quality, per-squad detail, and a live metric catalogue (the KPI Playbook). Runs on seeded dummy
@@ -20,7 +20,7 @@ Other scripts: `npm test`, `npm run typecheck`, `npm run build`, `npm run build:
 ## Open in Claude Code
 
 ```bash
-cd sinal-delivery-portal
+cd delta-delivery-portal
 claude
 ```
 
