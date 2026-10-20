@@ -72,8 +72,8 @@ function Sidebar({ path, collapsed, onToggle, onNavigate }: { path: string; coll
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <div className="truncate text-[16px] font-bold leading-6 text-on-primary">Performance Portal</div>
-            <div className="truncate text-label-sm text-primary-fixed-dim/70">Delta · Insights & Performance</div>
+            <div className="truncate text-[16px] font-bold leading-6 text-on-primary">Delta Hub</div>
+            <div className="truncate text-label-sm text-primary-fixed-dim/70">Insights & Performance</div>
           </div>
         )}
       </div>

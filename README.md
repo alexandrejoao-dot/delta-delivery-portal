@@ -1,4 +1,4 @@
-# Delta Performance Portal (POC)
+# Delta Hub (POC)
 
 A central place for delivery metrics across Global Platforms — Overview, Predictability, Flow,
 Quality, per-squad detail, and a live metric catalogue (the KPI Playbook). Runs on seeded dummy

@@ -1,4 +1,4 @@
-# Delta Performance Portal — delivery metrics POC
+# Delta Hub — Insights & Performance portal (delivery metrics POC)
 
 Central portal for delivery metrics across Global Platforms (squads → Delivery Leads → domains),
 built by the Insights & Performance team. This is a **proof of concept on dummy data**;

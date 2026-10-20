@@ -2,7 +2,7 @@
   "name": "delta-delivery-portal",
   "private": true,
   "version": "0.1.0",
-  "description": "Insights & Performance portal — delivery metrics POC (dummy data)",
+  "description": "Delta Hub — Insights & Performance portal; delivery metrics POC (dummy data)",
   "type": "module",
   "scripts": {
     "dev": "vite",
