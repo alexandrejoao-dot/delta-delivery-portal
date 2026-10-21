@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   MdOutlineAnalytics,
-  MdOutlineBugReport,
-  MdOutlineHourglassEmpty,
   MdOutlineShuffle,
   MdOutlineTimer,
   MdOutlineTrackChanges,
@@ -34,17 +32,15 @@ interface Box {
 const SCRUM_BOXES: Box[] = [
   { id: 'cycleP85', label: 'Cycle time (85th pct)', icon: <MdOutlineTimer /> },
   { id: 'sayDo', label: 'Completion ratio', icon: <MdOutlineAnalytics /> },
+  { id: 'velocityCv', label: 'Stability', icon: <MdOutlineWaves /> },
   { id: 'scopeChange', label: 'Scope volatility', icon: <MdOutlineShuffle /> },
-  { id: 'forecastAccuracy', icon: <MdOutlineTrackChanges /> },
-  { id: 'bugRatio', icon: <MdOutlineBugReport /> },
+  { id: 'deliveryForecast', icon: <MdOutlineTrackChanges /> },
 ];
 
 const KANBAN_BOXES: Box[] = [
   { id: 'cycleP85', label: 'Cycle time (85th pct)', icon: <MdOutlineTimer /> },
-  { id: 'throughputCv', label: 'Throughput stability', icon: <MdOutlineWaves /> },
-  { id: 'ageingWipShare', label: 'Work item age', icon: <MdOutlineHourglassEmpty /> },
+  { id: 'throughputCv', label: 'Stability', icon: <MdOutlineWaves /> },
   { id: 'forecastAccuracy', icon: <MdOutlineTrackChanges /> },
-  { id: 'bugRatio', icon: <MdOutlineBugReport /> },
 ];
 
 function boxTrends(data: Parameters<typeof metricTrend>[0], squads: Squad[], boxes: Box[]) {
@@ -54,7 +50,7 @@ function boxTrends(data: Parameters<typeof metricTrend>[0], squads: Squad[], box
 
 function KpiRow({ boxes, sc, trends, periodLabel }: { boxes: Box[]; sc: Scorecard; trends: Record<MetricId, number[]>; periodLabel: string }) {
   return (
-    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className={cx('mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3', boxes.length > 3 && 'xl:grid-cols-5')}>
       {boxes.map((b) => (
         <KpiCard key={b.id} metricId={b.id} label={b.label} sc={sc} trend={trends[b.id]} icon={b.icon} periodLabel={periodLabel} compact />
       ))}
@@ -155,7 +151,7 @@ export function Predictability() {
   return (
     <>
       <PageHeader
-        title="Predictability"
+        title="Health index"
         subtitle={`${label} · can we forecast what we will deliver? · last ${period} days`}
         actions={
           both ? (

@@ -32,9 +32,10 @@ type BaseValues = Omit<MetricValues, DerivedId>;
 export function computeValues(data: Dataset, squads: Squad[], w: Window, need?: MetricId[]): MetricValues {
   const base = baseValues(data, squads, w, need);
   if (need && !need.includes('healthIndex')) return { ...base, healthIndex: NaN };
-  // Health index is per squad, then averaged, so each squad counts once
+  // Health index is per squad, then averaged, so each squad counts once. A single squad can reuse
+  // `base` only when it was computed in full — a `need` list may have left the index inputs out.
   const perSquad = squads.map((s) =>
-    squadHealthIndex(squads.length === 1 ? base : baseValues(data, [s], w, HEALTH_INDEX_INPUTS[s.teamType]), s.teamType),
+    squadHealthIndex(squads.length === 1 && !need ? base : baseValues(data, [s], w, HEALTH_INDEX_INPUTS[s.teamType]), s.teamType),
   );
   return { ...base, healthIndex: mean(perSquad.filter(Number.isFinite)) };
 }

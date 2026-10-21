@@ -71,8 +71,8 @@ export function Overview() {
       <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           metricId="healthIndex"
-          to="/predictability"
-          toLabel="Open Predictability"
+          to="/health"
+          toLabel="Open Health index"
           sc={sc}
           trend={trends.health.map((t) => t.value)}
           icon={<MdOutlineMonitorHeart />}

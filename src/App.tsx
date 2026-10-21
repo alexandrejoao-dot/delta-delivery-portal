@@ -13,7 +13,8 @@ import { SquadDetail, SquadList } from './pages/Squads';
 
 function Page({ path }: { path: string }) {
   if (path === '/') return <Overview />;
-  if (path === '/predictability') return <Predictability />;
+  // /predictability kept so links shared before the rename still work
+  if (path === '/health' || path === '/predictability') return <Predictability />;
   if (path === '/flow') return <Flow />;
   if (path === '/quality') return <Quality />;
   if (path === '/squads') return <SquadList />;

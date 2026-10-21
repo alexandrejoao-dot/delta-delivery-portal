@@ -12,6 +12,7 @@ import { sayDo, scopeChange, velocityVariability } from '../predictability';
 import { bugRatio } from '../quality';
 import { scorecard, squadHealth, squadHealthIndex } from '../scorecard';
 import { cv, percentile } from '../stats';
+import { metricTrend } from '../trend';
 
 const AS_OF = '2026-10-02T00:00:00.000Z';
 const day = (n: number) => new Date(Date.parse(AS_OF) - n * DAY_MS).toISOString();
@@ -296,5 +297,13 @@ describe('work item age at a past date', () => {
     const data = generateDataset();
     const sq = data.squads.find((s) => s.id === 'sq-borealis')!;
     expect(Number.isFinite(scorecard(data, [sq], 90).previous.ageingWipShare)).toBe(true);
+  });
+});
+
+describe('health index trend', () => {
+  it('works for a single squad, not just groups', () => {
+    const data = generateDataset();
+    const values = metricTrend(data, [data.squads[0]], 'healthIndex', { points: 8 }).map((t) => t.value);
+    expect(values.filter(Number.isFinite).length).toBeGreaterThan(0);
   });
 });

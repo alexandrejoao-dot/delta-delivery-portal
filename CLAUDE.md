@@ -47,7 +47,7 @@ src/
     __tests__/               Vitest
   state/filters.tsx          Scope (all / domain / Delivery Lead / squad), period, team type
   components/                UI kit, layout shell, charts, SquadMatrix, KpiCard
-  pages/                     Overview, Predictability, Flow, Quality, Squads (+detail),
+  pages/                     Overview, Predictability (shown as "Health index"), Flow, Quality, Squads (+detail),
                              MetricCatalogue, DataSources, ComingSoon
 ```
 
