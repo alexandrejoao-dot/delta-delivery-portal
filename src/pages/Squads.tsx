@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   MdArrowBack,
   MdOutlineAnalytics,
@@ -29,7 +29,10 @@ import { useFilters, useScopedSquads, type TeamTypeFilter } from '../state/filte
 import { AgeingWipTable, ageingRows } from './Flow';
 
 export function SquadList() {
-  const { data, squads, period, label, teamType, setTeamType } = useScopedSquads();
+  const { data, squads: inScope, period, label } = useScopedSquads();
+  // Filters this list only — the rest of the portal always shows both team types
+  const [teamType, setTeamType] = useState<TeamTypeFilter>('all');
+  const squads = useMemo(() => (teamType === 'all' ? inScope : inScope.filter((s) => s.teamType === teamType)), [inScope, teamType]);
   return (
     <>
       <PageHeader
