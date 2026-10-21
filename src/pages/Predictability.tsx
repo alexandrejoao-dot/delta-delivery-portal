@@ -18,7 +18,7 @@ import { navigate } from '../lib/router';
 import { evaluate, METRICS, type MetricId } from '../metrics/catalogue';
 import { weeklyThroughput } from '../metrics/flow';
 import { scorecard, type Scorecard } from '../metrics/scorecard';
-import { metricTrend } from '../metrics/trend';
+import { metricTrend, TREND_DEFAULTS } from '../metrics/trend';
 import { sprintSayDo, sprintVelocity } from '../metrics/predictability';
 import { useScopedSquads } from '../state/filters';
 
@@ -43,17 +43,74 @@ const KANBAN_BOXES: Box[] = [
   { id: 'forecastAccuracy', icon: <MdOutlineTrackChanges /> },
 ];
 
+type Trend = ReturnType<typeof metricTrend>;
+
 function boxTrends(data: Parameters<typeof metricTrend>[0], squads: Squad[], boxes: Box[]) {
-  if (!squads.length) return {} as Record<MetricId, number[]>;
-  return Object.fromEntries(boxes.map((b) => [b.id, metricTrend(data, squads, b.id).map((t) => t.value)])) as Record<MetricId, number[]>;
+  if (!squads.length) return {} as Record<MetricId, Trend>;
+  return Object.fromEntries(boxes.map((b) => [b.id, metricTrend(data, squads, b.id)])) as Record<MetricId, Trend>;
 }
 
-function KpiRow({ boxes, sc, trends, periodLabel }: { boxes: Box[]; sc: Scorecard; trends: Record<MetricId, number[]>; periodLabel: string }) {
+function KpiRow({ boxes, sc, trends, periodLabel }: { boxes: Box[]; sc: Scorecard; trends: Record<MetricId, Trend>; periodLabel: string }) {
   return (
     <div className={cx('mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3', boxes.length > 3 && 'xl:grid-cols-5')}>
       {boxes.map((b) => (
-        <KpiCard key={b.id} metricId={b.id} label={b.label} sc={sc} trend={trends[b.id]} icon={b.icon} periodLabel={periodLabel} compact />
+        <KpiCard
+          key={b.id}
+          metricId={b.id}
+          label={b.label}
+          sc={sc}
+          trend={trends[b.id]?.map((t) => t.value)}
+          icon={b.icon}
+          periodLabel={periodLabel}
+          compact
+        />
       ))}
+    </div>
+  );
+}
+
+function windowText(id: MetricId) {
+  const o = TREND_DEFAULTS[id] ?? { windowDays: 28, stepDays: 14 };
+  const weeks = (d: number) => Math.round(d / 7);
+  return o.windowDays === o.stepDays
+    ? `per ${weeks(o.windowDays)}-week window`
+    : `trailing ${weeks(o.windowDays)}-week windows, every ${weeks(o.stepDays)} weeks`;
+}
+
+/** One trend chart per KPI box, in the same order, with the on-track threshold as the target line. */
+function BoxCharts({ boxes, trends }: { boxes: Box[]; trends: Record<MetricId, Trend> }) {
+  return (
+    <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+      {boxes.map((b, i) => {
+        const def = METRICS[b.id];
+        const trend = trends[b.id] ?? [];
+        const good = def.thresholds?.good;
+        const better = def.direction === 'higher' ? 'Higher is better · ' : def.direction === 'lower' ? 'Lower is better · ' : '';
+        const name = b.label ?? def.name;
+        // Own top: the chart's default floor of 1 would put small percentages (10–20%) against a 100% axis
+        const top = Math.max(...trend.map((t) => t.value).filter(Number.isFinite), good ?? 0) * 1.15;
+        return (
+          <Card key={b.id} className={cx(boxes.length % 2 === 1 && i === boxes.length - 1 && 'lg:col-span-2')}>
+            <CardHeader title={name} subtitle={`${better}${windowText(b.id)}`.replace(/^./, (c) => c.toUpperCase())} />
+            <div className="p-5">
+              <LineChart
+                ariaLabel={`${name} over time`}
+                xLabels={trend.map((t) => shortDate(t.endMs))}
+                series={[{ id: b.id, label: name, values: trend.map((t) => (Number.isFinite(t.value) ? t.value : null)) }]}
+                yFormat={(v) => formatMetric(b.id, v, true)}
+                yMin={0}
+                yMax={def.unit === 'percent' ? Math.min(1, top) : top || undefined}
+                target={
+                  good === undefined
+                    ? undefined
+                    : { value: good, label: `On track ${def.direction === 'higher' ? '≥' : '≤'} ${formatMetric(b.id, good, true)}` }
+                }
+                area
+              />
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
@@ -71,8 +128,6 @@ export function Predictability() {
   const kanban = useMemo(() => squads.filter((s) => s.teamType === 'kanban'), [squads]);
   const scScrum = useMemo(() => scorecard(data, scrum, period), [data, scrum, period]);
   const scKanban = useMemo(() => scorecard(data, kanban, period), [data, kanban, period]);
-  const sayDoTrend = useMemo(() => metricTrend(data, scrum, 'sayDo'), [data, scrum]);
-  const scopeTrend = useMemo(() => metricTrend(data, scrum, 'scopeChange'), [data, scrum]);
   const scrumBoxTrends = useMemo(() => boxTrends(data, scrum, SCRUM_BOXES), [data, scrum]);
   const kanbanBoxTrends = useMemo(() => boxTrends(data, kanban, KANBAN_BOXES), [data, kanban]);
   const single = squads.length === 1 ? squads[0] : null;
@@ -173,58 +228,30 @@ export function Predictability() {
           <h3 className="mb-3 text-label-md uppercase text-on-surface-variant">Scrum squads ({scrum.length})</h3>
           <KpiRow boxes={SCRUM_BOXES} sc={scScrum} trends={scrumBoxTrends} periodLabel={pl} />
 
-          <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
-            <Card>
-              <CardHeader title="Say/Do by sprint" subtitle="Share of committed points completed" />
+          <BoxCharts boxes={SCRUM_BOXES} trends={scrumBoxTrends} />
+
+          {single && sprints.length > 0 && (
+            <Card className="mb-8">
+              <CardHeader title="Committed vs completed" subtitle={`${single.name} · points per sprint`} />
               <div className="p-5">
-                <LineChart
-                  ariaLabel="Say/Do by sprint"
-                  xLabels={sayDoTrend.map((t) => shortDate(t.endMs))}
-                  series={[{ id: 'sd', label: 'Say/Do', values: sayDoTrend.map((t) => t.value) }]}
-                  yFormat={(v) => `${Math.round(v * 100)}%`}
-                  yMin={0.4}
-                  yMax={1}
-                  target={{ value: 0.8, label: 'Target 80%' }}
-                  area
+                <BarChart
+                  ariaLabel="Committed vs completed points per sprint"
+                  xLabels={sprints.map((s) => s.name.replace(`${single.name} Sprint `, 'S'))}
+                  series={[
+                    { id: 'c', label: 'Committed', values: sprints.map((s) => s.committedPoints) },
+                    { id: 'd', label: 'Completed (of committed)', values: sprints.map((s) => s.completedCommittedPoints) },
+                    { id: 'a', label: 'Added mid-sprint', values: sprints.map((s) => s.addedPoints) },
+                  ]}
+                  yFormat={(v) => `${Math.round(v)}`}
+                  tooltipExtra={(i) => [
+                    { label: 'Say/Do', value: `${Math.round(sprintSayDo(sprints[i]) * 100)}%` },
+                    { label: 'Velocity', value: `${sprintVelocity(sprints[i])} pts` },
+                    { label: 'Goal met', value: sprints[i].goalMet ? 'Yes' : 'No' },
+                  ]}
                 />
               </div>
             </Card>
-            {single && sprints.length ? (
-              <Card>
-                <CardHeader title="Committed vs completed" subtitle={`${single.name} · points per sprint`} />
-                <div className="p-5">
-                  <BarChart
-                    ariaLabel="Committed vs completed points per sprint"
-                    xLabels={sprints.map((s) => s.name.replace(`${single.name} Sprint `, 'S'))}
-                    series={[
-                      { id: 'c', label: 'Committed', values: sprints.map((s) => s.committedPoints) },
-                      { id: 'd', label: 'Completed (of committed)', values: sprints.map((s) => s.completedCommittedPoints) },
-                      { id: 'a', label: 'Added mid-sprint', values: sprints.map((s) => s.addedPoints) },
-                    ]}
-                    yFormat={(v) => `${Math.round(v)}`}
-                    tooltipExtra={(i) => [
-                      { label: 'Say/Do', value: `${Math.round(sprintSayDo(sprints[i]) * 100)}%` },
-                      { label: 'Velocity', value: `${sprintVelocity(sprints[i])} pts` },
-                      { label: 'Goal met', value: sprints[i].goalMet ? 'Yes' : 'No' },
-                    ]}
-                  />
-                </div>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader title="Mid-sprint scope change" subtitle="Points added after sprint start ÷ commitment" />
-                <div className="p-5">
-                  <BarChart
-                    ariaLabel="Scope change by sprint"
-                    xLabels={scopeTrend.map((t) => shortDate(t.endMs))}
-                    series={[{ id: 'sc', label: 'Scope change', values: scopeTrend.map((t) => (Number.isFinite(t.value) ? t.value : 0)), color: '#eb6834' }]}
-                    yFormat={(v) => `${Math.round(v * 100)}%`}
-                    reference={{ value: 0.15, label: 'Healthy ≤ 15%' }}
-                  />
-                </div>
-              </Card>
-            )}
-          </div>
+          )}
 
           {scrum.length > 1 && (
             <Card className="mb-8 overflow-hidden">
@@ -264,6 +291,7 @@ export function Predictability() {
             probabilistic forecasting (e.g. Monte Carlo “when will it be done?”) trustworthy.
           </p>
           <KpiRow boxes={KANBAN_BOXES} sc={scKanban} trends={kanbanBoxTrends} periodLabel={pl} />
+          <BoxCharts boxes={KANBAN_BOXES} trends={kanbanBoxTrends} />
           <Card className="overflow-hidden">
             <CardHeader title="Kanban squad breakdown" subtitle={`Sparkline: items finished per week, last ${Math.round(period / 7)} weeks`} />
             <SortableTable
