@@ -14,6 +14,8 @@ npm test              # Vitest — metric engine unit tests
 npm run typecheck     # tsc
 npm run build         # production build → dist/
 npm run build:single  # one self-contained HTML → dist-single/index.html (esbuild + Tailwind, no Vite)
+npm run snapshot      # eazyBI CSV exports in eazybi-data/ → public/data/snapshot.json (both git-ignored)
+npm run snapshot:sample  # same, from fictional exports in eazybi-data.example/
 ```
 
 Run `npm run typecheck && npm test` before calling any change done.
@@ -32,7 +34,7 @@ src/
     model.ts                 Canonical data model — the ONLY shapes the app reads
     sources/types.ts         DataSource interface
     sources/mock/            Seeded dummy-data generator (behavioural squad profiles)
-    sources/eazybi/          eazyBI adapter stub (next step — see below)
+    sources/eazybi/          eazyBI: snapshot loader + CSV export converter (docs/eazybi-reports.md)
     index.ts                 Picks source from VITE_DATA_SOURCE (mock | eazybi)
     DataContext.tsx          Loads the dataset once, exposes useDataset()
   metrics/                   Pure functions, no React. All maths lives here.
@@ -92,14 +94,11 @@ tech debt). Later additions use their own RNG stream (`seed + n`) so existing ge
 
 ## Next steps (suggested order)
 
-1. **Wire eazyBI** (`src/data/sources/eazybi/eazybiSource.ts` has the plan):
-   - Extraction job outside the browser (Python or Node) calling eazyBI report export API on a
-     schedule; credentials never reach the front end.
-   - Map exports → `Dataset` (canonical model) and write dated snapshots (JSON + Parquet/DuckDB)
-     to keep history for future migration validation.
-   - Front end fetches the latest snapshot via `VITE_SNAPSHOT_URL`, `VITE_DATA_SOURCE=eazybi`.
-   - Needed reports: issues with created / first-In-Progress / resolved dates, type, points,
-     epic→initiative; sprint scope (committed, added, removed, completed-of-committed, completed-of-added).
+1. **Wire eazyBI** — manual export path is built (`docs/eazybi-reports.md`): two eazyBI CSV reports +
+   a hand-written `squads.json` → `npm run snapshot` → `VITE_DATA_SOURCE=eazybi`. Real data stays on the
+   company computer (`eazybi-data/`, `public/data/` are git-ignored; converter errors/summary never print
+   cell values). Next: confirm the report columns against real eazyBI Cloud, then automate the export
+   via the eazyBI API on a company-run schedule, keeping dated snapshots.
 2. Auth + role-based default scope (squad members land on their squad).
 3. Persist shareable views in the URL (scope + period as query params).
 4. Forecasting: "how many in 2 weeks?" is live (matrix column); add "when will it be done?" for a backlog / initiative.

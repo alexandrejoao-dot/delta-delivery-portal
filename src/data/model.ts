@@ -106,7 +106,8 @@ export interface Sprint {
   /** Points removed from the sprint after start */
   removedPoints: number;
   goal: string;
-  goalMet: boolean;
+  /** Not a Jira field — null when the source doesn't record it (e.g. eazyBI) */
+  goalMet: boolean | null;
 }
 
 /** Squad health check dimensions (after the Spotify squad health check model). */

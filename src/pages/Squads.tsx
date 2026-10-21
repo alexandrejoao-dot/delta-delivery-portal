@@ -150,7 +150,7 @@ export function SquadDetail({ id }: { id: string }) {
                 tooltipExtra={(i) => [
                   { label: 'Say/Do', value: `${Math.round(sprintSayDo(sprints[i]) * 100)}%` },
                   { label: 'Velocity', value: `${sprintVelocity(sprints[i])} pts` },
-                  { label: 'Goal met', value: sprints[i].goalMet ? 'Yes' : 'No' },
+                  { label: 'Goal met', value: sprints[i].goalMet === null ? 'Not recorded' : sprints[i].goalMet ? 'Yes' : 'No' },
                 ]}
               />
             </div>
@@ -253,8 +253,13 @@ export function SquadDetail({ id }: { id: string }) {
                 key: 'g',
                 header: 'Goal',
                 align: 'right',
-                sortValue: (s) => Number(s.goalMet),
-                render: (s) => <StatusBadge size="sm" status={s.goalMet ? 'good' : 'watch'} label={s.goalMet ? 'Met' : 'Missed'} />,
+                sortValue: (s) => (s.goalMet === null ? -1 : Number(s.goalMet)),
+                render: (s) =>
+                  s.goalMet === null ? (
+                    <StatusBadge size="sm" status="none" />
+                  ) : (
+                    <StatusBadge size="sm" status={s.goalMet ? 'good' : 'watch'} label={s.goalMet ? 'Met' : 'Missed'} />
+                  ),
               },
             ]}
           />

@@ -246,7 +246,7 @@ export function Predictability() {
                   tooltipExtra={(i) => [
                     { label: 'Say/Do', value: `${Math.round(sprintSayDo(sprints[i]) * 100)}%` },
                     { label: 'Velocity', value: `${sprintVelocity(sprints[i])} pts` },
-                    { label: 'Goal met', value: sprints[i].goalMet ? 'Yes' : 'No' },
+                    { label: 'Goal met', value: sprints[i].goalMet === null ? 'Not recorded' : sprints[i].goalMet ? 'Yes' : 'No' },
                   ]}
                 />
               </div>

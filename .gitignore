@@ -2,3 +2,6 @@ node_modules
 dist
 *.local
 .DS_Store
+# Real eazyBI exports and the snapshot built from them — company data, never committed
+eazybi-data/
+public/data/

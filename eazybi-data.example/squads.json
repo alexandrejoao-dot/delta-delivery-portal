@@ -1,0 +1,148 @@
+{
+  "squads": [
+    {
+      "name": "Atlas",
+      "teamType": "scrum",
+      "domain": "Player Experience",
+      "valueStream": "Onboarding & Account",
+      "deliveryLead": "Ana Sousa",
+      "issueMatch": [
+        "ATL"
+      ],
+      "sprintMatch": [
+        "Atlas board"
+      ]
+    },
+    {
+      "name": "Borealis",
+      "teamType": "scrum",
+      "domain": "Player Experience",
+      "valueStream": "Engagement",
+      "deliveryLead": "Ana Sousa",
+      "issueMatch": [
+        "BOR"
+      ],
+      "sprintMatch": [
+        "Borealis board"
+      ]
+    },
+    {
+      "name": "Cobalt",
+      "teamType": "kanban",
+      "domain": "Player Experience",
+      "valueStream": "Engagement",
+      "deliveryLead": "Ana Sousa",
+      "issueMatch": [
+        "COB"
+      ]
+    },
+    {
+      "name": "Dune",
+      "teamType": "scrum",
+      "domain": "Payments & Wallet",
+      "valueStream": "Deposits",
+      "deliveryLead": "Pedro Lima",
+      "issueMatch": [
+        "DUN"
+      ],
+      "sprintMatch": [
+        "Dune board"
+      ]
+    },
+    {
+      "name": "Ember",
+      "teamType": "scrum",
+      "domain": "Payments & Wallet",
+      "valueStream": "Deposits",
+      "deliveryLead": "Pedro Lima",
+      "issueMatch": [
+        "EMB"
+      ],
+      "sprintMatch": [
+        "Ember board"
+      ]
+    },
+    {
+      "name": "Fjord",
+      "teamType": "kanban",
+      "domain": "Payments & Wallet",
+      "valueStream": "Withdrawals & Risk",
+      "deliveryLead": "Pedro Lima",
+      "issueMatch": [
+        "FJO"
+      ]
+    },
+    {
+      "name": "Granite",
+      "teamType": "scrum",
+      "domain": "Payments & Wallet",
+      "valueStream": "Withdrawals & Risk",
+      "deliveryLead": "Sofia Costa",
+      "issueMatch": [
+        "GRA"
+      ],
+      "sprintMatch": [
+        "Granite board"
+      ]
+    },
+    {
+      "name": "Halo",
+      "teamType": "scrum",
+      "domain": "Core Platform",
+      "valueStream": "Identity & Access",
+      "deliveryLead": "Sofia Costa",
+      "issueMatch": [
+        "HAL"
+      ],
+      "sprintMatch": [
+        "Halo board"
+      ]
+    },
+    {
+      "name": "Iris",
+      "teamType": "kanban",
+      "domain": "Core Platform",
+      "valueStream": "Identity & Access",
+      "deliveryLead": "Sofia Costa",
+      "issueMatch": [
+        "IRI"
+      ]
+    },
+    {
+      "name": "Juno",
+      "teamType": "scrum",
+      "domain": "Core Platform",
+      "valueStream": "Platform Services",
+      "deliveryLead": "Tiago Nunes",
+      "issueMatch": [
+        "JUN"
+      ],
+      "sprintMatch": [
+        "Juno board"
+      ]
+    },
+    {
+      "name": "Kestrel",
+      "teamType": "scrum",
+      "domain": "Core Platform",
+      "valueStream": "Platform Services",
+      "deliveryLead": "Tiago Nunes",
+      "issueMatch": [
+        "KES"
+      ],
+      "sprintMatch": [
+        "Kestrel board"
+      ]
+    },
+    {
+      "name": "Lumen",
+      "teamType": "kanban",
+      "domain": "Core Platform",
+      "valueStream": "Platform Services",
+      "deliveryLead": "Tiago Nunes",
+      "issueMatch": [
+        "LUM"
+      ]
+    }
+  ]
+}

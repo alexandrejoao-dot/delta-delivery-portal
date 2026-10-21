@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run",
-    "build:single": "node scripts/build-preview.mjs"
+    "build:single": "node scripts/build-preview.mjs",
+    "snapshot": "node scripts/eazybi-snapshot.mjs",
+    "snapshot:sample": "node scripts/eazybi-snapshot.mjs --sample"
   },
   "dependencies": {
     "react": "^19.2.0",

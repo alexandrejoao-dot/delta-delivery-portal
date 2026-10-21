@@ -29,5 +29,8 @@ export const avgVelocity = (sprints: Sprint[]) => mean(sprints.map(sprintVelocit
 export const velocityVariability = (sprints: Sprint[]) =>
   sprints.length >= 3 ? cv(sprints.map(sprintVelocity)) : NaN; // too noisy below 3 sprints
 
-export const goalHitRate = (sprints: Sprint[]) =>
-  sprints.length ? sprints.filter((s) => s.goalMet).length / sprints.length : NaN;
+/** Only sprints where the goal outcome was recorded count; NaN when none were. */
+export const goalHitRate = (sprints: Sprint[]) => {
+  const known = sprints.filter((s) => s.goalMet !== null);
+  return known.length ? known.filter((s) => s.goalMet).length / known.length : NaN;
+};
