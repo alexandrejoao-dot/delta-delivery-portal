@@ -45,8 +45,8 @@ interface Profile {
   velocityNoise?: number;
   sayDo?: [number, number];
   scopeChange?: number;
-  /** Share of stories that are tech debt, start → end (default 0.1) */
-  techDebt?: [number, number];
+  /** Share of stories not aligned to an OKR, start → end (default 0.2) */
+  nonOkr?: [number, number];
   /** Pulse check mean score (1–5), start → end, plus per-dimension offsets */
   pulse?: { base: [number, number]; offsets?: Partial<Record<PulseDimension, number>> };
 }
@@ -140,7 +140,7 @@ const squadSeeds: SquadSeed[] = [
     id: 'sq-juno', name: 'Juno', domainId: 'dom-core', valueStreamId: 'vs-platform', deliveryLeadId: 'dl-tiago',
     teamType: 'scrum', boardKey: 'JUN',
     // Volatile velocity — planning instability
-    profile: { throughput: [6, 6], cycleMedian: [5, 5.3], cycleSigma: 0.7, waitMedian: 6, bugShare: [0.17, 0.18], velocity: 40, velocityNoise: 0.42, sayDo: [0.76, 0.74], scopeChange: 0.14, techDebt: [0.15, 0.32], pulse: { base: [3.6, 3.5], offsets: { process: -0.4, codebase: -0.3 } } },
+    profile: { throughput: [6, 6], cycleMedian: [5, 5.3], cycleSigma: 0.7, waitMedian: 6, bugShare: [0.17, 0.18], velocity: 40, velocityNoise: 0.42, sayDo: [0.76, 0.74], scopeChange: 0.14, nonOkr: [0.25, 0.45], pulse: { base: [3.6, 3.5], offsets: { process: -0.4, codebase: -0.3 } } },
   },
   {
     id: 'sq-kestrel', name: 'Kestrel', domainId: 'dom-core', valueStreamId: 'vs-platform', deliveryLeadId: 'dl-tiago',
@@ -201,12 +201,17 @@ function buildInitiatives(asOfMs: number): Initiative[] {
 
 /**
  * Development category. Uses its own RNG stream so adding it didn't change any other generated value.
- * Bugs → defects; tasks split maintenance / tech debt; stories are features unless tech debt.
+ * ~5% left uncategorised; bugs keep the lights on; tasks split keep-the-lights-on / L&D / non-OKR;
+ * stories are OKR aligned unless not.
  */
-function categoryFor(rng: Rng, type: WorkItemType, techDebt: number): WorkCategory {
-  if (type === 'bug') return 'defect';
-  if (type === 'task') return rng.chance(0.65) ? 'maintenance' : 'techDebt';
-  return rng.chance(techDebt) ? 'techDebt' : 'feature';
+function categoryFor(rng: Rng, type: WorkItemType, nonOkr: number): WorkCategory {
+  if (rng.chance(0.05)) return 'none';
+  if (type === 'bug') return 'ktlo';
+  if (type === 'task') {
+    const r = rng.next();
+    return r < 0.55 ? 'ktlo' : r < 0.8 ? 'learning' : 'nonOkr';
+  }
+  return rng.chance(nonOkr) ? 'nonOkr' : 'okr';
 }
 
 function buildWorkItems(rng: Rng, catRng: Rng, seed: SquadSeed, asOfMs: number, initiatives: Initiative[]): WorkItem[] {
@@ -237,7 +242,7 @@ function buildWorkItems(rng: Rng, catRng: Rng, seed: SquadSeed, asOfMs: number, 
         key: `${seed.boardKey}-${1000 + n++}`,
         squadId: seed.id,
         type,
-        category: categoryFor(catRng, type, lerp(...(p.techDebt ?? [0.1, 0.1]), tStart)),
+        category: categoryFor(catRng, type, lerp(...(p.nonOkr ?? [0.2, 0.2]), tStart)),
         summary: summary.charAt(0).toUpperCase() + summary.slice(1),
         storyPoints: type === 'story' ? rng.pick(STORY_POINTS) : type === 'bug' ? rng.pick([1, 2, 3] as const) : null,
         initiativeId: type === 'story' && myInitiatives.length && rng.chance(0.7) ? rng.pick(myInitiatives).id : null,

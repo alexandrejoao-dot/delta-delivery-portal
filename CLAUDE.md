@@ -88,9 +88,9 @@ hover tooltips on every chart, legends for 2+ series.
 portal has stories to show: Borealis (scope creep), Granite (over-commitment), Ember (bug
 ratio climbing), Fjord (flow slowing), Juno (volatile velocity), Lumen (throughput dropping),
 Iris (improving), Atlas/Dune/Halo/Kestrel/Cobalt (healthy). Snapshot: 2 Oct 2026.
-Monthly pulse checks (7 per squad) and work categories (feature / tech debt / maintenance / defect)
+Monthly pulse checks (7 per squad) and work categories (OKR aligned / non-OKR aligned / keep the lights on / L&D)
 echo those stories (e.g. Granite's pulse is low, Ember's "Health of codebase" drops, Juno carries more
-tech debt). Later additions use their own RNG stream (`seed + n`) so existing generated values never shift.
+non-OKR work). Later additions use their own RNG stream (`seed + n`) so existing generated values never shift.
 
 ## Next steps (suggested order)
 
@@ -101,7 +101,7 @@ tech debt). Later additions use their own RNG stream (`seed + n`) so existing ge
    via the eazyBI API on a company-run schedule, keeping dated snapshots.
 2. Auth + role-based default scope (squad members land on their squad).
 3. Persist shareable views in the URL (scope + period as query params).
-4. Forecasting: "how many in 2 weeks?" is live (matrix column); add "when will it be done?" for a backlog / initiative.
+4. Forecasting: "how many in 2 weeks?" is computed (`deliveryForecast`, in the catalogue; the matrix and Health index show its accuracy); add "when will it be done?" for a backlog / initiative.
 5. Next domain: Engineering (DORA) — add entities (deployments, incidents) to the model + an adapter.
 6. Pod metrics (formation-to-productivity, handoff overhead) — only after scope is agreed.
 

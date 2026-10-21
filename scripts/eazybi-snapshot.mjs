@@ -106,6 +106,7 @@ if (verbose) {
   console.log('Per squad (local only — contains names):');
   s.squads.forEach((q) => console.log(`  ${q.name.padEnd(24)} ${q.teamType.padEnd(7)} ${String(q.issues).padStart(6)} issues ${String(q.sprints).padStart(4)} sprints`));
   if (s.unmatchedSquadValues.length) console.log(`\nSquad values with no match in squads.json: ${s.unmatchedSquadValues.join(', ')}`);
+  if (s.unmappedCategoryValues.length) console.log(`\nWork category values not in categoryMap: ${s.unmappedCategoryValues.join(', ')}`);
   console.log('');
 }
 if (s.warnings.length) console.log(`Notes:\n${s.warnings.map((w) => `  • ${w}`).join('\n')}\n`);

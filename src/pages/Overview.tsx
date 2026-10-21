@@ -5,13 +5,13 @@ import { HighlightsCard } from '../components/HighlightsCard';
 import { InsightsPanel } from '../components/InsightsPanel';
 import { KpiCard } from '../components/KpiCard';
 import { SquadMatrix, useSquadRows } from '../components/SquadMatrix';
-import { Card, CardHeader, cx, EmptyState, PageHeader, StatusBadge } from '../components/ui';
+import { Card, CardHeader, cx, DeltaChip, EmptyState, PageHeader, StatusBadge } from '../components/ui';
 import { formatMetric } from '../lib/format';
 import { Link } from '../lib/router';
 import { generateInsights } from '../metrics/insights';
 import { categoryMixFor } from '../metrics/investment';
 import { windows } from '../metrics/period';
-import { pulseDimensions, pulsesFor } from '../metrics/pulse';
+import { pulseMovers, pulsesFor } from '../metrics/pulse';
 import { scorecard, type Health } from '../metrics/scorecard';
 import { metricTrend } from '../metrics/trend';
 import { useScopedSquads } from '../state/filters';
@@ -30,7 +30,7 @@ export function Overview() {
   const extra = useMemo(() => {
     const w = windows(data.asOf, period);
     return {
-      lowestPulse: pulseDimensions(pulsesFor(data, squads), w.current).slice(0, 2),
+      pulseMovers: pulseMovers(pulsesFor(data, squads), w.current, w.previous),
       mix: categoryMixFor(data, squads, w.current),
       mixPrev: categoryMixFor(data, squads, w.previous),
     };
@@ -95,18 +95,27 @@ export function Overview() {
           icon={<MdOutlineSentimentSatisfied />}
           periodLabel={periodLabel}
           footer={
-            extra.lowestPulse.length ? (
+            extra.pulseMovers.up || extra.pulseMovers.down ? (
               <>
-                Lowest:{' '}
-                {extra.lowestPulse.map((d, i) => (
-                  <span key={d.id}>
-                    {i > 0 && ' · '}
-                    {d.label} <span className="tabular font-semibold text-on-surface">{d.score.toFixed(1)}</span>
-                  </span>
-                ))}
+                {/* Same row layout as the Development categories tile */}
+                <ul className="flex flex-col gap-1">
+                  {[extra.pulseMovers.up, extra.pulseMovers.down].map(
+                    (m) =>
+                      m && (
+                        <li key={m.id} className="-mx-1.5 flex items-center justify-between gap-2 rounded px-1.5 py-0.5 text-label-sm">
+                          <span className="truncate text-on-surface-variant">{m.label}</span>
+                          <span className="flex shrink-0 items-center gap-2">
+                            <DeltaChip text={`${m.delta > 0 ? '+' : '−'}${Math.abs(m.delta).toFixed(1)}`} improved={m.delta > 0} />
+                            <span className="w-9 text-right tabular font-semibold text-on-surface">{m.to.toFixed(1)}</span>
+                          </span>
+                        </li>
+                      ),
+                  )}
+                </ul>
+                <p className="mt-2 text-label-sm text-outline">Biggest rise and fall by dimension · change vs prev. {periodLabel}</p>
               </>
             ) : (
-              'No pulse check in this period'
+              'No pulse check in both periods to compare'
             )
           }
         />

@@ -27,7 +27,7 @@ export function toEazybiExports(data: Dataset): { issuesCsv: string; sprintsCsv:
       d(i.doneAt),
       i.storyPoints,
       i.initiativeId ? initiative.get(i.initiativeId) ?? '' : '',
-      { feature: 'New feature', techDebt: 'Tech debt', maintenance: 'Maintenance', defect: 'Defect' }[i.category],
+      { okr: 'OKR aligned', nonOkr: 'Non-OKR aligned', ktlo: 'Keep the lights on', learning: 'L&D', none: '' }[i.category],
     ]),
   );
   const issuesCsv = [line([c.issue, c.type, c.created, c.started, c.done, c.points, c.epic!, 'Work category']), ...issueRows].join('\n') + '\n';

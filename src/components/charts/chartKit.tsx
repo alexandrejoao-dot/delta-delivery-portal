@@ -12,6 +12,8 @@ export const CHART = {
   text: '#45474c',
   surface: '#ffffff',
   series: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100'],
+  /** For "no value" buckets (e.g. uncategorised work) — deliberately not a categorical colour */
+  neutral: '#b4b7bd',
   target: '#75777d',
 };
 

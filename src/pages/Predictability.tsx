@@ -34,7 +34,7 @@ const SCRUM_BOXES: Box[] = [
   { id: 'sayDo', label: 'Completion ratio', icon: <MdOutlineAnalytics /> },
   { id: 'velocityCv', label: 'Stability', icon: <MdOutlineWaves /> },
   { id: 'scopeChange', label: 'Scope volatility', icon: <MdOutlineShuffle /> },
-  { id: 'deliveryForecast', icon: <MdOutlineTrackChanges /> },
+  { id: 'forecastAccuracy', icon: <MdOutlineTrackChanges /> },
 ];
 
 const KANBAN_BOXES: Box[] = [

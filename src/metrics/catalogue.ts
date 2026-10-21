@@ -22,7 +22,7 @@ export type MetricId =
   | 'bugRatio'
   | 'healthIndex'
   | 'pulseScore'
-  | 'featureShare'
+  | 'okrShare'
   | 'deliveryForecast'
   | 'forecastAccuracy';
 
@@ -233,14 +233,14 @@ export const METRICS: Record<MetricId, MetricDefinition> = {
     thresholds: { good: 3.8, watch: 3.3 },
     caveat: 'The squad’s own read of itself — use it to start a conversation, never to rank squads. Pulses with fewer than 3 respondents are hidden.',
   },
-  featureShare: {
-    id: 'featureShare',
+  okrShare: {
+    id: 'okrShare',
     name: 'Development categories',
     category: 'Investment',
     unit: 'percent',
     direction: 'neutral',
     appliesTo: ['scrum', 'kanban'],
-    description: 'Where effort goes: new features, tech debt, maintenance and defects. Headline shows the new-features share.',
+    description: 'Where effort goes: OKR aligned, non-OKR aligned, keep the lights on and L&D. Headline shows the OKR-aligned share.',
     formula: 'items done per category ÷ all items done (period)',
     source: 'eazyBI — Issues resolved by work category',
     caveat: 'There is no right mix. Agree a target split with product and engineering, then watch for drift.',

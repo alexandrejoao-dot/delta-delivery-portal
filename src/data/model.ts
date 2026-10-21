@@ -60,14 +60,16 @@ export type WorkItemType = 'story' | 'bug' | 'task';
  * Development category — where effort goes (investment mix). Independent of issue type:
  * in Jira this comes from a "Work category" field or label, mapped by the source.
  */
-export type WorkCategory = 'feature' | 'techDebt' | 'maintenance' | 'defect';
+export type WorkCategory = 'okr' | 'nonOkr' | 'ktlo' | 'learning' | 'none';
 
 /** Fixed display order — also the categorical colour order. */
 export const WORK_CATEGORIES: { id: WorkCategory; label: string }[] = [
-  { id: 'feature', label: 'New features' },
-  { id: 'techDebt', label: 'Tech debt' },
-  { id: 'maintenance', label: 'Maintenance' },
-  { id: 'defect', label: 'Defects' },
+  { id: 'okr', label: 'OKR aligned' },
+  { id: 'nonOkr', label: 'Non-OKR aligned' },
+  { id: 'ktlo', label: 'Keep the lights on' },
+  { id: 'learning', label: 'L&D' },
+  /** Not categorised in Jira — shown so the mix always adds up to every item finished */
+  { id: 'none', label: 'None' },
 ];
 
 export interface WorkItem {

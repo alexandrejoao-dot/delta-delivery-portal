@@ -34,3 +34,32 @@ export const pulsesFor = (data: Dataset, squads: Squad[]) => {
   const ids = new Set(squads.map((s) => s.id));
   return data.pulseChecks.filter((p) => ids.has(p.squadId));
 };
+
+export interface PulseMover {
+  id: PulseDimension;
+  label: string;
+  from: number;
+  to: number;
+  delta: number;
+}
+
+/**
+ * Biggest rise and biggest fall among pulse dimensions vs the previous window. Only squads with a
+ * reportable pulse in both windows count, so squads joining or skipping a survey don't read as a change.
+ * Either side is null when nothing moved that way.
+ */
+export function pulseMovers(pulses: PulseCheck[], current: Window, previous: Window): { up: PulseMover | null; down: PulseMover | null } {
+  const prevBySquad = new Map(latestPulses(pulses, previous).map((p) => [p.squadId, p]));
+  const pairs = latestPulses(pulses, current)
+    .filter((p) => prevBySquad.has(p.squadId))
+    .map((p) => [prevBySquad.get(p.squadId)!, p] as const);
+  if (!pairs.length) return { up: null, down: null };
+  const moves = PULSE_DIMENSIONS.map((d) => {
+    const from = mean(pairs.map(([a]) => a.scores[d.id]));
+    const to = mean(pairs.map(([, b]) => b.scores[d.id]));
+    return { id: d.id, label: d.label, from, to, delta: to - from };
+  });
+  const up = moves.filter((m) => m.delta > 0).sort((a, b) => b.delta - a.delta)[0] ?? null;
+  const down = moves.filter((m) => m.delta < 0).sort((a, b) => a.delta - b.delta)[0] ?? null;
+  return { up, down };
+}

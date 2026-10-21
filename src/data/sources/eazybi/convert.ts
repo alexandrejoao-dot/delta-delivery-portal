@@ -86,13 +86,20 @@ export const DEFAULT_COLUMNS: ColumnConfig = {
   typeMap: { story: 'story', bug: 'bug', task: 'task' },
   excludeTypes: ['epic', 'sub-task', 'subtask'],
   categoryMap: {
-    feature: 'feature',
-    'new feature': 'feature',
-    'tech debt': 'techDebt',
-    'technical debt': 'techDebt',
-    maintenance: 'maintenance',
-    defect: 'defect',
-    bug: 'defect',
+    okr: 'okr',
+    'okr aligned': 'okr',
+    'okr-aligned': 'okr',
+    'non-okr': 'nonOkr',
+    'non okr': 'nonOkr',
+    'non-okr aligned': 'nonOkr',
+    'non okr aligned': 'nonOkr',
+    ktlo: 'ktlo',
+    'keep the lights on': 'ktlo',
+    'l&d': 'learning',
+    learning: 'learning',
+    'learning & development': 'learning',
+    'learning and development': 'learning',
+    none: 'none',
   },
 };
 
@@ -100,11 +107,13 @@ export class ConvertError extends Error {}
 
 export interface ConvertSummary {
   asOf: string;
-  issues: { rows: number; used: number; excludedType: number; noSquad: number; noStart: number; notDone: number; noPoints: number };
+  issues: { rows: number; used: number; excludedType: number; noSquad: number; noStart: number; notDone: number; noPoints: number; unmappedCategory: number };
   sprints: { rows: number; used: number; noSquad: number; notClosed: number; estimatedCompletedOfCommitted: number };
   squads: { name: string; teamType: TeamType; issues: number; sprints: number }[];
   /** Distinct squad-column values that matched no squad — local diagnostics only, never paste these outside */
   unmatchedSquadValues: string[];
+  /** Work category values not in categoryMap — local diagnostics only */
+  unmappedCategoryValues: string[];
   warnings: string[];
 }
 
@@ -293,14 +302,15 @@ export function convertEazybi(input: ConvertInput): { dataset: Dataset; summary:
     category: col(it, c.category, 'work category', !!c.category),
   };
   if (ix.epic < 0) warnings.push('No epic column — issues will show as "Not linked to an initiative".');
-  if (ix.category < 0) warnings.push('No work category column — the investment mix counts bugs as defects and everything else as new features.');
+  if (ix.category < 0) warnings.push('No work category column — every issue counts as "None" in development categories.');
 
   const typeMap = new Map(Object.entries(cfg.typeMap).map(([k, v]) => [norm(k), v]));
   const excluded = new Set(cfg.excludeTypes.map(norm));
   const categoryMap = new Map(Object.entries(cfg.categoryMap).map(([k, v]) => [norm(k), v]));
   const initiatives = new Map<string, Initiative>();
   const unmatched = new Set<string>();
-  const is = { rows: it.rows.length, used: 0, excludedType: 0, noSquad: 0, noStart: 0, notDone: 0, noPoints: 0 };
+  const unmappedCategories = new Set<string>();
+  const is = { rows: it.rows.length, used: 0, excludedType: 0, noSquad: 0, noStart: 0, notDone: 0, noPoints: 0, unmappedCategory: 0 };
   const workItems: WorkItem[] = [];
   const seenKeys = new Set<string>();
 
@@ -337,8 +347,17 @@ export function convertEazybi(input: ConvertInput): { dataset: Dataset; summary:
     if (!doneAt) is.notDone++;
     if (points === null) is.noPoints++;
     const type = typeMap.get(rawType) ?? 'task';
+    // Blank → None; a value the map doesn't know → None too, counted so it can be added to categoryMap
     const rawCategory = norm(cell(ix.category));
-    const category: WorkCategory = categoryMap.get(rawCategory) ?? (type === 'bug' ? 'defect' : 'feature');
+    let category: WorkCategory = 'none';
+    if (rawCategory && rawCategory !== '(none)') {
+      const mapped = categoryMap.get(rawCategory);
+      if (mapped) category = mapped;
+      else {
+        is.unmappedCategory++;
+        unmappedCategories.add(cell(ix.category).trim());
+      }
+    }
     const epic = cell(ix.epic).trim();
     let initiativeId: string | null = null;
     if (epic && epic !== '(none)') {
@@ -370,6 +389,9 @@ export function convertEazybi(input: ConvertInput): { dataset: Dataset; summary:
     });
     is.used++;
   });
+  if (is.unmappedCategory) {
+    warnings.push(`${is.unmappedCategory} issue(s) had a work category value not in categoryMap — counted as "None". Add those values to categoryMap in columns.json (--verbose lists them).`);
+  }
   if (!is.used) throw new ConvertError('issues.csv: no rows matched a squad in squads.json — check "issueMatch" (by default the Jira project key).');
 
   // ---- sprints ----
@@ -479,6 +501,7 @@ export function convertEazybi(input: ConvertInput): { dataset: Dataset; summary:
       sprints: sprints.filter((sp) => sp.squadId === s.id).length,
     })),
     unmatchedSquadValues: [...unmatched].sort(),
+    unmappedCategoryValues: [...unmappedCategories].sort(),
     warnings,
   };
   return { dataset, summary };

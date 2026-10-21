@@ -37,7 +37,7 @@ One row per issue. In **Analyze**, create a report:
 | `Issue resolution date` | when it was done (blank if not done) | yes |
 | `Issue Story Points` | | yes |
 | `Issue Epic Link` | epic — shown as the initiative (`Issue Parent` in newer Jira) | optional |
-| a work category field or label | feature / tech debt / maintenance / defect | optional |
+| a work category field or label | OKR aligned / Non-OKR aligned / Keep the lights on / L&D (blank → None) | optional |
 
 **`First in progress date`** — new calculated measure in Measures. Put every "in progress" status of
 your workflows in the set:
@@ -113,7 +113,7 @@ Only needed when your column names differ from the defaults above. Override just
 {
   "issues": { "started": "First In Progress", "epic": "Issue Parent", "category": "Work type" },
   "sprints": { "board": null, "end": "Sprint complete date" },
-  "categoryMap": { "Improvement": "techDebt", "Support": "maintenance" }
+  "categoryMap": { "Roadmap": "okr", "BAU": "ktlo", "Training": "learning", "Other": "nonOkr" }
 }
 ```
 

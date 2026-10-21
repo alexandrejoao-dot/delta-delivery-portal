@@ -6,11 +6,12 @@ import { ageingWip, cycleTimes, throughputPerWeek, wipAt } from '../flow';
 import { dailyThroughput, forecastAccuracy, forecastBacktest, forecastItems } from '../forecast';
 import { categoryMix } from '../investment';
 import { canCompare, findHighlights, pickHighlights, type Highlight } from '../highlights';
-import { latestPulses, pulseDimensions, pulseScore } from '../pulse';
+import { latestPulses, pulseDimensions, pulseMovers, pulseScore } from '../pulse';
 import { DAY_MS, windows } from '../period';
 import { sayDo, scopeChange, velocityVariability } from '../predictability';
 import { bugRatio } from '../quality';
 import { scorecard, squadHealth, squadHealthIndex } from '../scorecard';
+import { roundPercents } from '../../lib/format';
 import { cv, percentile } from '../stats';
 import { metricTrend } from '../trend';
 
@@ -21,7 +22,7 @@ const item = (over: Partial<WorkItem>): WorkItem => ({
   key: 'T-1',
   squadId: 'sq',
   type: 'story',
-  category: 'feature',
+  category: 'okr',
   summary: '',
   storyPoints: 3,
   initiativeId: null,
@@ -199,6 +200,19 @@ describe('pulse check', () => {
   it('hides pulses below the anonymity threshold', () => {
     expect(pulseScore([pulse({ respondents: 2 })], w)).toBeNaN();
   });
+  it('finds the biggest rise and fall per dimension, only for squads with a pulse in both windows', () => {
+    const { current, previous } = windows(AS_OF, 30);
+    const before = pulse({ id: 'b1', date: day(40), score: 3 });
+    const now = pulse({ id: 'n1', date: day(5), score: 3 });
+    now.scores.fun = 4;
+    now.scores.speed = 2.5;
+    // sq2 only answered recently — a very low score that must not count as a fall
+    const newcomer = pulse({ id: 'n2', squadId: 'sq2', date: day(5), score: 1 });
+    const m = pulseMovers([before, now, newcomer], current, previous);
+    expect(m.up).toMatchObject({ id: 'fun', from: 3, to: 4 });
+    expect(m.down).toMatchObject({ id: 'speed', from: 3, to: 2.5 });
+    expect(pulseMovers([now], current, previous)).toEqual({ up: null, down: null });
+  });
   it('lists dimensions lowest first', () => {
     const p = pulse({});
     p.scores.codebase = 2;
@@ -209,8 +223,17 @@ describe('pulse check', () => {
 describe('development categories', () => {
   it('shares of finished items per category sum to 1', () => {
     const w = windows(AS_OF, 30).current;
-    const mix = categoryMix([item({}), item({ key: 'B', category: 'defect' }), item({ key: 'T', category: 'techDebt' }), item({ key: 'F' })], w);
-    expect(mix).toEqual({ feature: 0.5, techDebt: 0.25, maintenance: 0, defect: 0.25 });
+    const mix = categoryMix([item({}), item({ key: 'B', category: 'ktlo' }), item({ key: 'T', category: 'learning' }), item({ key: 'F' })], w);
+    expect(mix).toEqual({ okr: 0.5, nonOkr: 0, ktlo: 0.25, learning: 0.25, none: 0 });
+  });
+});
+
+describe('rounded percentages', () => {
+  it('always add up to 100', () => {
+    // 52.4 + 16.4 + 28.6 + 2.6 rounds to 52 + 16 + 29 + 3 = 100, where independent rounding could miss
+    expect(roundPercents([0.524, 0.164, 0.286, 0.026])).toEqual([52, 16, 29, 3]);
+    expect(roundPercents([0.335, 0.335, 0.33]).reduce((a, b) => a + b, 0)).toBe(100);
+    expect(roundPercents([0.5, NaN, 0.5])).toEqual([50, NaN, 50]);
   });
 });
 

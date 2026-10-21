@@ -154,17 +154,14 @@ export function SquadMatrix({ data, squads, period, title = 'Squad health matrix
       render: (r) => (r.squad.teamType === 'scrum' ? <Cell row={r} id="scopeChange" /> : <span className="text-outline">n/a</span>),
     },
     {
-      key: 'forecast',
-      header: 'Delivery forecast',
-      tip: `${METRICS.deliveryForecast.description} ${METRICS.deliveryForecast.caveat}`,
-      sortValue: (r) => r.sc.current.deliveryForecast,
+      key: 'forecastAccuracy',
+      header: 'Forecasting accuracy',
+      tip: `${METRICS.forecastAccuracy.description} ${METRICS.forecastAccuracy.caveat}`,
+      sortValue: (r) => r.sc.current.forecastAccuracy,
       render: (r) => (
         <div>
-          <span className="tabular font-medium">
-            {Number.isFinite(r.sc.current.deliveryForecast) ? `≥ ${r.sc.current.deliveryForecast}` : '—'}
-            <span className="text-[11px] text-on-surface-variant"> items</span>
-          </span>
-          <Sub>2 wks · 85%</Sub>
+          <Cell row={r} id="forecastAccuracy" />
+          <Sub>2-wk forecasts met</Sub>
         </div>
       ),
     },
@@ -185,7 +182,7 @@ export function SquadMatrix({ data, squads, period, title = 'Squad health matrix
         stability_cv: r.sc.current[stabilityMetric(r)],
         stability_metric: stabilityMetric(r),
         scope_volatility: r.squad.teamType === 'scrum' ? r.sc.current.scopeChange : '',
-        forecast_items_2wk_p85: r.sc.current.deliveryForecast,
+        forecasting_accuracy: r.sc.current.forecastAccuracy,
       })),
     );
 

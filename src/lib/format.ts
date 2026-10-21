@@ -23,6 +23,27 @@ export function formatValue(v: number, unit: Unit, opts: { compact?: boolean } =
   }
 }
 
+/**
+ * Whole percentages that add up to exactly 100 (largest remainder), so a breakdown never reads 99% or 101%.
+ * Non-finite shares stay NaN and are left out of the total.
+ */
+export function roundPercents(shares: number[]): number[] {
+  const finite = shares.map((v) => (Number.isFinite(v) ? v * 100 : NaN));
+  const total = Math.round(finite.filter(Number.isFinite).reduce((a, b) => a + b, 0));
+  const floors = finite.map((v) => (Number.isFinite(v) ? Math.floor(v) : NaN));
+  let missing = total - floors.filter(Number.isFinite).reduce((a, b) => a + b, 0);
+  const byRemainder = finite
+    .map((v, i) => ({ i, r: Number.isFinite(v) ? v - Math.floor(v) : -1 }))
+    .filter((x) => x.r >= 0)
+    .sort((a, b) => b.r - a.r);
+  for (const { i } of byRemainder) {
+    if (missing <= 0) break;
+    floors[i] += 1;
+    missing--;
+  }
+  return floors;
+}
+
 export const formatMetric = (id: MetricId, v: number, compact = false) => formatValue(v, METRICS[id].unit, { compact });
 
 /** Signed delta text in the metric's unit (pp for percentages). */

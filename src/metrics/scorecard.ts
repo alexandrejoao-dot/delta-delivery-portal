@@ -89,7 +89,7 @@ function baseValues(data: Dataset, squads: Squad[], w: Window, need?: MetricId[]
         data.pulseChecks.filter((p) => ids.has(p.squadId)),
         w,
       ),
-    featureShare: () => categoryMix(items, w).feature,
+    okrShare: () => categoryMix(items, w).okr,
     deliveryForecast: () => deliveryForecast(items, w),
     forecastAccuracy: () => forecastAccuracy(items, w),
   };

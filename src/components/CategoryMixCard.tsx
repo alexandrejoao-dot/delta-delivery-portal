@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { WORK_CATEGORIES, type WorkCategory } from '../data/model';
-import { formatDelta } from '../lib/format';
+import { formatDelta, roundPercents } from '../lib/format';
 import { METRICS } from '../metrics/catalogue';
 import { CHART } from './charts/chartKit';
 import { DeltaChip, InfoTip, cx } from './ui';
@@ -12,16 +12,17 @@ interface Props {
   icon?: ReactNode;
 }
 
-const pct = (v: number) => (Number.isFinite(v) ? `${Math.round(v * 100)}%` : '—');
-
 /**
- * KPI tile for development categories: headline new-features share, a 100% bar of the mix
+ * KPI tile for development categories: headline OKR-aligned share, a 100% bar of the mix
  * and a labelled row per category. No status — the mix is a conversation, not a target.
  */
 export function CategoryMixCard({ current, previous, periodLabel, icon }: Props) {
-  const def = METRICS.featureShare;
+  const def = METRICS.okrShare;
   const [hover, setHover] = useState<WorkCategory | null>(null);
-  const colour = (i: number) => CHART.series[i];
+  const colour = (i: number) => (WORK_CATEGORIES[i].id === 'none' ? CHART.neutral : CHART.series[i]);
+  // Rounded together so the rows always add up to 100%
+  const shown = roundPercents(WORK_CATEGORIES.map((c) => current[c.id]));
+  const shownPct = (i: number) => (Number.isFinite(shown[i]) ? `${shown[i]}%` : '—');
   const hasData = WORK_CATEGORIES.some((c) => Number.isFinite(current[c.id]));
 
   return (
@@ -35,8 +36,8 @@ export function CategoryMixCard({ current, previous, periodLabel, icon }: Props)
         <span className="text-[22px] text-primary">{icon}</span>
       </div>
       <div className="relative mt-3 flex items-end gap-2">
-        <div className="text-display-lg tabular text-on-surface">{pct(current.feature)}</div>
-        <span className="mb-1.5 text-body-sm text-on-surface-variant">new features</span>
+        <div className="text-display-lg tabular text-on-surface">{shownPct(WORK_CATEGORIES.findIndex((c) => c.id === 'okr'))}</div>
+        <span className="mb-1.5 text-body-sm text-on-surface-variant">OKR aligned</span>
       </div>
 
       {hasData && (
@@ -53,7 +54,7 @@ export function CategoryMixCard({ current, previous, periodLabel, icon }: Props)
                   style={{ width: `${v * 100}%`, background: colour(i) }}
                   onMouseEnter={() => setHover(c.id)}
                   onMouseLeave={() => setHover(null)}
-                  title={`${c.label}: ${pct(v)}`}
+                  title={`${c.label}: ${shownPct(i)}`}
                 />
               );
             })}
@@ -71,8 +72,8 @@ export function CategoryMixCard({ current, previous, periodLabel, icon }: Props)
                   {c.label}
                 </span>
                 <span className="flex items-center gap-2">
-                  <DeltaChip text={formatDelta('featureShare', current[c.id], previous[c.id])} improved={null} />
-                  <span className="w-9 text-right tabular font-semibold text-on-surface">{pct(current[c.id])}</span>
+                  <DeltaChip text={formatDelta('okrShare', current[c.id], previous[c.id])} improved={null} />
+                  <span className="w-9 text-right tabular font-semibold text-on-surface">{shownPct(i)}</span>
                 </span>
               </li>
             ))}

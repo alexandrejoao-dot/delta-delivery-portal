@@ -61,6 +61,17 @@ describe('eazyBI conversion', () => {
     expect(dataset.sprints[0]).toMatchObject({ completedCommittedPoints: 18, completedAddedPoints: 1, goalMet: null });
     expect(summary.warnings.some((w) => w.includes('estimated'))).toBe(true);
   });
+  it('blank and unknown work categories count as None; unknown ones are reported', () => {
+    const issues =
+      'Issue,Issue type,Issue created date,First in progress date,Issue resolution date,Issue Story Points,Work category\n' +
+      'PAY-1 A,Story,2026-01-01,2026-01-02,2026-01-05,3,OKR aligned\n' +
+      'PAY-2 B,Story,2026-01-01,2026-01-02,2026-01-05,3,\n' +
+      'PAY-3 C,Story,2026-01-01,2026-01-02,2026-01-05,3,Roadmap\n';
+    const { dataset, summary } = convertEazybi({ issuesCsv: issues, sprintsCsv: SPRINTS, squads: [squad()], columns: { issues: { category: 'Work category' } } });
+    expect(dataset.workItems.map((i) => i.category)).toEqual(['okr', 'none', 'none']);
+    expect(summary.issues.unmappedCategory).toBe(1);
+    expect(summary.unmappedCategoryValues).toEqual(['Roadmap']);
+  });
   it('round-trips the mock data: same metrics after export and conversion', () => {
     const mock = generateDataset();
     const { issuesCsv, sprintsCsv, squads } = toEazybiExports(mock);
@@ -69,7 +80,7 @@ describe('eazyBI conversion', () => {
     expect(dataset.sprints.length).toBe(mock.sprints.filter((s) => Date.parse(s.endDate) <= Date.parse(mock.asOf)).length);
     const a = scorecard(mock, mock.squads, 90).current;
     const b = scorecard(dataset, dataset.squads, 90).current;
-    for (const id of ['sayDo', 'scopeChange', 'velocityCv', 'throughputCv', 'cycleP85', 'leadP85', 'bugRatio', 'featureShare'] as const) {
+    for (const id of ['sayDo', 'scopeChange', 'velocityCv', 'throughputCv', 'cycleP85', 'leadP85', 'bugRatio', 'okrShare'] as const) {
       // Exports drop milliseconds, so allow for that (4 decimals of a day is under 10 seconds)
       expect(b[id], id).toBeCloseTo(a[id], 4);
     }
