@@ -36,8 +36,8 @@ export function SquadList() {
   return (
     <>
       <PageHeader
-        title="Squads"
-        subtitle={`${label} · ${squads.length} squads · last ${period} days`}
+        title="Teams"
+        subtitle={`${label} · ${squads.length} teams · last ${period} days`}
         actions={
           <Segmented<TeamTypeFilter>
             ariaLabel="Team type"
@@ -51,7 +51,7 @@ export function SquadList() {
           />
         }
       />
-      {squads.length ? <SquadMatrix data={data} squads={squads} period={period} title="All squads" /> : <EmptyState title="No squads match" />}
+      {squads.length ? <SquadMatrix data={data} squads={squads} period={period} title="All teams" /> : <EmptyState title="No teams match" />}
     </>
   );
 }
@@ -86,11 +86,12 @@ export function SquadDetail({ id }: { id: string }) {
     [items, data.asOf, period],
   );
 
-  if (!squad) return <EmptyState title="Squad not found" body="It may have been renamed or removed from the source." />;
+  if (!squad) return <EmptyState title="Team not found" body="It may have been renamed or removed from the source." />;
 
   const domain = data.domains.find((d) => d.id === squad.domainId);
   const vs = data.valueStreams.find((v) => v.id === squad.valueStreamId);
   const dl = data.deliveryLeads.find((d) => d.id === squad.deliveryLeadId);
+  const pod = data.pods.find((p) => p.id === squad.podId);
   const health = squadHealth(sc, squad.teamType);
   const isScrum = squad.teamType === 'scrum';
   const pl = `${period}d`;
@@ -101,8 +102,8 @@ export function SquadDetail({ id }: { id: string }) {
     <>
       <PageHeader
         eyebrow={
-          <Link to="/squads" className="inline-flex items-center gap-1 text-label-md text-on-surface-variant hover:text-on-surface">
-            <MdArrowBack /> All squads
+          <Link to="/teams" className="inline-flex items-center gap-1 text-label-md text-on-surface-variant hover:text-on-surface">
+            <MdArrowBack /> All teams
           </Link>
         }
         title={
@@ -113,10 +114,10 @@ export function SquadDetail({ id }: { id: string }) {
             <StatusBadge status={health.health} />
           </span>
         }
-        subtitle={`${domain?.name} · ${vs?.name} · Delivery Lead: ${dl?.name} · Board ${squad.boardKey} · last ${period} days`}
+        subtitle={`${domain?.name} · ${vs?.name} · Delivery Lead: ${dl?.name}${pod ? ` · ${pod.name} pod` : ''} · Board ${squad.boardKey} · last ${period} days`}
         actions={
           <Button icon={<MdOutlineVisibility />} variant={isMyView ? 'secondary' : 'primary'} onClick={() => setScope(isMyView ? { kind: 'all' } : { kind: 'squad', id: squad.id })}>
-            {isMyView ? 'Back to all squads view' : 'Make this my view'}
+            {isMyView ? 'Back to all teams view' : 'Make this my view'}
           </Button>
         }
       />
@@ -208,7 +209,7 @@ export function SquadDetail({ id }: { id: string }) {
 
       <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-5">
         <Card className="overflow-hidden lg:col-span-3">
-          <CardHeader title="Work in progress" subtitle={`${ageing.length} items · compared with this squad’s 85th pct cycle time (${formatMetric('cycleP85', ageing[0]?.p85 ?? NaN, true)})`} />
+          <CardHeader title="Work in progress" subtitle={`${ageing.length} items · compared with this team’s 85th pct cycle time (${formatMetric('cycleP85', ageing[0]?.p85 ?? NaN, true)})`} />
           {ageing.length ? <AgeingWipTable rows={ageing} showSquad={false} /> : <EmptyState title="Nothing in progress" />}
         </Card>
         <Card className="lg:col-span-2">

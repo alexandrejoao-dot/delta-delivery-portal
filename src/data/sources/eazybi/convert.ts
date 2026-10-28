@@ -16,6 +16,8 @@ export interface SquadConfig {
   domain: string;
   valueStream?: string;
   deliveryLead?: string;
+  /** Pod (group of teams) — optional */
+  pod?: string;
   /** Values of the issue "squad" column that belong to this squad — by default the Jira project key, e.g. ["PAY"] */
   issueMatch: string[];
   /** Sprint board names, or sprint name prefixes when the export has no board column. Defaults to issueMatch. */
@@ -269,10 +271,11 @@ export function convertEazybi(input: ConvertInput): { dataset: Dataset; summary:
   const asOfMs = Date.parse(asOf);
   const warnings: string[] = [];
 
-  // Organisation: domains, value streams and Delivery Leads come from squads.json
+  // Organisation: domains, value streams, Delivery Leads and pods come from squads.json
   const domains = new Map<string, { id: string; name: string; manager: string }>();
   const valueStreams = new Map<string, { id: string; name: string; domainId: string }>();
   const leads = new Map<string, { id: string; name: string }>();
+  const pods = new Map<string, { id: string; name: string }>();
   const squads: Squad[] = input.squads.map((s) => {
     const domainId = `dom-${slug(s.domain)}`;
     if (!domains.has(domainId)) domains.set(domainId, { id: domainId, name: s.domain, manager: '' });
@@ -282,7 +285,9 @@ export function convertEazybi(input: ConvertInput): { dataset: Dataset; summary:
     const dlName = s.deliveryLead ?? 'Not set';
     const deliveryLeadId = `dl-${slug(dlName)}`;
     if (!leads.has(deliveryLeadId)) leads.set(deliveryLeadId, { id: deliveryLeadId, name: dlName });
-    return { id: `sq-${slug(s.name)}`, name: s.name, domainId, valueStreamId, deliveryLeadId, teamType: s.teamType, boardKey: s.issueMatch[0] };
+    const podId = s.pod ? `pod-${slug(s.pod)}` : null;
+    if (podId && !pods.has(podId)) pods.set(podId, { id: podId, name: s.pod! });
+    return { id: `sq-${slug(s.name)}`, name: s.name, domainId, valueStreamId, deliveryLeadId, podId, teamType: s.teamType, boardKey: s.issueMatch[0] };
   });
   const issueOwner = new Map<string, number>();
   input.squads.forEach((s, i) => s.issueMatch.forEach((v) => issueOwner.set(norm(v), i)));
@@ -381,7 +386,6 @@ export function convertEazybi(input: ConvertInput): { dataset: Dataset; summary:
       summary,
       storyPoints: points,
       initiativeId,
-      podId: null,
       createdAt,
       // A start after done (re-opened work) would give negative cycle time — treat as unknown
       startedAt: startedAt && doneAt && startedAt > doneAt ? null : startedAt,
@@ -484,6 +488,7 @@ export function convertEazybi(input: ConvertInput): { dataset: Dataset; summary:
     domains: [...domains.values()],
     valueStreams: [...valueStreams.values()],
     deliveryLeads: [...leads.values()],
+    pods: [...pods.values()],
     squads,
     initiatives: [...initiatives.values()],
     workItems,

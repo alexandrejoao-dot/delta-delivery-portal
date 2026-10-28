@@ -167,6 +167,8 @@ export function DeltaChip({ text, improved }: { text: string | null; improved: b
       )}
     >
       <Icon className="text-[14px]" aria-hidden />
+      {/* The arrow is an icon — say the direction in text too (screen readers, Ask panel) */}
+      <span className="sr-only">{flat ? 'unchanged' : `${up ? 'up' : 'down'}${improved === true ? ', better' : improved === false ? ', worse' : ''}`} </span>
       {text.replace(/^[+−±]/, '')}
     </span>
   );

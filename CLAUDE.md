@@ -47,7 +47,7 @@ src/
     trend.ts                 Metric over trailing windows (sparklines/trend charts)
     insights.ts              Rule-based "conversation starters"
     __tests__/               Vitest
-  state/filters.tsx          Scope (all / domain / Delivery Lead / squad), period, team type
+  state/filters.tsx          Scope (all / domain / Delivery Lead / pod / squad), period
   components/                UI kit, layout shell, charts, SquadMatrix, KpiCard
   pages/                     Overview, Predictability (shown as "Health index"), Flow, Quality, Squads (+detail),
                              MetricCatalogue, DataSources, ComingSoon
@@ -62,8 +62,9 @@ Sources never leak past `data/`; pages never compute metrics inline — add a fu
   sprint goals. Kanban: throughput variability. Flow and quality apply to both.
 - **Never compare velocity or story points across squads.** `velocity` is only computed for a
   single squad (`computeValues` returns NaN for groups). Throughput is shown with a caveat.
-- **Pods are a point-in-time attribute** (`WorkItem.podId`), never a grouping key. Long-run
-  trends anchor on squad / initiative / value stream.
+- **A pod is a group of teams** (`Squad.podId`, `Dataset.pods`) and a scope like domain or Delivery Lead.
+- **"Team" in the UI, `squad` in code.** Users see "team(s)"; types, ids, the `squad` scope kind and
+  `squads.json` keep the old name. `/squads` routes still resolve.
 - **Trusted partner, not oversight.** Signals are "On track / Watch / Needs attention", every
   badge is traceable to the metrics behind it, insights are phrased as coaching prompts, and
   squads get their own view ("Make this my view") before comparative views are pushed to leadership.

@@ -52,11 +52,11 @@ export function Overview() {
     setSignalFilter(next);
     if (next) {
       const smooth = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-      requestAnimationFrame(() => document.getElementById('squad-matrix')?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' }));
+      requestAnimationFrame(() => document.getElementById('team-matrix')?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' }));
     }
   };
 
-  if (!squads.length) return <EmptyState title="No squads in this scope" body="Pick a different scope in the top bar." />;
+  if (!squads.length) return <EmptyState title="No teams in this scope" body="Pick a different scope in the top bar." />;
 
   const periodLabel = `${period}d`;
   const scrumCount = squads.filter((s) => s.teamType === 'scrum').length;
@@ -65,7 +65,7 @@ export function Overview() {
     <>
       <PageHeader
         title="Delivery overview"
-        subtitle={`${label} · ${squads.length} squad${squads.length > 1 ? 's' : ''} (${scrumCount} Scrum, ${squads.length - scrumCount} Kanban) · last ${period} days`}
+        subtitle={`${label} · ${squads.length} team${squads.length > 1 ? 's' : ''} (${scrumCount} Scrum, ${squads.length - scrumCount} Kanban) · last ${period} days`}
       />
 
       <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -80,7 +80,7 @@ export function Overview() {
           footer={
             squads.length > 1 ? (
               <>
-                <span className="font-semibold text-on-surface">{indexCounts.good}</span> of {squads.length} squads on track ·{' '}
+                <span className="font-semibold text-on-surface">{indexCounts.good}</span> of {squads.length} teams on track ·{' '}
                 <span className="font-semibold text-on-surface">{indexCounts.attention}</span> need attention
               </>
             ) : (
@@ -139,7 +139,7 @@ export function Overview() {
       <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
         <HighlightsCard data={data} squads={squads} period={period} />
         <Card>
-          <CardHeader title="Signals at a glance" subtitle={`${squads.length} squads · ${period} days`} />
+          <CardHeader title="Signals at a glance" subtitle={`${squads.length} teams · ${period} days`} />
           <div className="flex flex-col gap-3 p-5">
             {(['attention', 'watch', 'good'] as Health[]).map((h) => {
               const active = signalFilter === h;
@@ -150,7 +150,7 @@ export function Overview() {
                   type="button"
                   disabled={!clickable}
                   aria-pressed={active}
-                  title={clickable ? (active ? 'Show all squads' : 'Show these squads in the matrix below') : undefined}
+                  title={clickable ? (active ? 'Show all teams' : 'Show these teams in the matrix below') : undefined}
                   onClick={() => toggleSignal(h)}
                   className={cx(
                     'flex items-center justify-between rounded-md border px-4 py-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-series-1/40',
@@ -172,7 +172,7 @@ export function Overview() {
               <Link to="/metrics" className="font-medium text-series-1 hover:underline">
                 metric catalogue
               </Link>
-              . Squads see their own data before comparisons are shared more widely.
+              . Teams see their own data before comparisons are shared more widely.
             </p>
           </div>
         </Card>
@@ -181,7 +181,7 @@ export function Overview() {
       {showMatrix && (
         <div className="mb-8">
           <SquadMatrix
-            id="squad-matrix"
+            id="team-matrix"
             data={data}
             squads={squads}
             period={period}

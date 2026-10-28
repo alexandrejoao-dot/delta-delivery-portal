@@ -174,12 +174,12 @@ export function Predictability() {
     [data, kanban, period],
   );
 
-  if (!squads.length) return <EmptyState title="No squads in this scope" />;
+  if (!squads.length) return <EmptyState title="No teams in this scope" />;
 
   const pl = `${period}d`;
   const squadCol: Column<Row> = {
     key: 'name',
-    header: 'Squad',
+    header: 'Team',
     sortValue: (r) => r.squad.name,
     render: (r) => (
       <div className="flex items-center gap-3">
@@ -225,7 +225,7 @@ export function Predictability() {
 
       {showScrum && (
         <>
-          <h3 className="mb-3 text-label-md uppercase text-on-surface-variant">Scrum squads ({scrum.length})</h3>
+          <h3 className="mb-3 text-label-md uppercase text-on-surface-variant">Scrum teams ({scrum.length})</h3>
           <KpiRow boxes={SCRUM_BOXES} sc={scScrum} trends={scrumBoxTrends} periodLabel={pl} />
 
           <BoxCharts boxes={SCRUM_BOXES} trends={scrumBoxTrends} />
@@ -255,11 +255,11 @@ export function Predictability() {
 
           {scrum.length > 1 && (
             <Card className="mb-8 overflow-hidden">
-              <CardHeader title="Scrum squad breakdown" subtitle="Sparkline: Say/Do over the last 8 sprints" />
+              <CardHeader title="Scrum team breakdown" subtitle="Sparkline: Say/Do over the last 8 sprints" />
               <SortableTable
                 rows={scrumRows}
                 rowKey={(r) => r.squad.id}
-                onRowClick={(r) => navigate(`/squads/${r.squad.id}`)}
+                onRowClick={(r) => navigate(`/teams/${r.squad.id}`)}
                 initialSort={{ key: 'sayDo', dir: 'asc' }}
                 minWidth={820}
                 columns={[
@@ -285,19 +285,19 @@ export function Predictability() {
 
       {showKanban && (
         <>
-          <h3 className="mb-3 text-label-md uppercase text-on-surface-variant">Kanban squads ({kanban.length})</h3>
+          <h3 className="mb-3 text-label-md uppercase text-on-surface-variant">Kanban teams ({kanban.length})</h3>
           <p className="mb-4 max-w-3xl text-body-sm text-on-surface-variant">
-            Kanban squads don’t commit to sprints, so predictability is read from how stable weekly throughput is. Stable throughput is what makes
+            Kanban teams don’t commit to sprints, so predictability is read from how stable weekly throughput is. Stable throughput is what makes
             probabilistic forecasting (e.g. Monte Carlo “when will it be done?”) trustworthy.
           </p>
           <KpiRow boxes={KANBAN_BOXES} sc={scKanban} trends={kanbanBoxTrends} periodLabel={pl} />
           <BoxCharts boxes={KANBAN_BOXES} trends={kanbanBoxTrends} />
           <Card className="overflow-hidden">
-            <CardHeader title="Kanban squad breakdown" subtitle={`Sparkline: items finished per week, last ${Math.round(period / 7)} weeks`} />
+            <CardHeader title="Kanban team breakdown" subtitle={`Sparkline: items finished per week, last ${Math.round(period / 7)} weeks`} />
             <SortableTable
               rows={kanbanRows}
               rowKey={(r) => r.squad.id}
-              onRowClick={(r) => navigate(`/squads/${r.squad.id}`)}
+              onRowClick={(r) => navigate(`/teams/${r.squad.id}`)}
               initialSort={{ key: 'throughputCv', dir: 'desc' }}
               minWidth={720}
               columns={[

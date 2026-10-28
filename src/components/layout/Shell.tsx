@@ -20,6 +20,7 @@ import {
   MdSearch,
 } from 'react-icons/md';
 import { useDataset } from '../../data/DataContext';
+import { InsightPanel } from '../InsightPanel';
 import { Link, navigate } from '../../lib/router';
 import { longDate } from '../../lib/format';
 import type { PeriodDays } from '../../metrics/period';
@@ -41,7 +42,7 @@ const sections: { title: string; items: NavItem[] }[] = [
       { to: '/health', label: 'Health index', icon: <MdOutlineMonitorHeart /> },
       { to: '/flow', label: 'Flow', icon: <MdOutlineTimer /> },
       { to: '/quality', label: 'Quality', icon: <MdOutlineBugReport /> },
-      { to: '/squads', label: 'Squads', icon: <MdOutlineGroups /> },
+      { to: '/teams', label: 'Teams', icon: <MdOutlineGroups /> },
     ],
   },
   {
@@ -151,7 +152,7 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
   const goSearch = (value: string) => {
     const sq = data.squads.find((s) => s.name.toLowerCase() === value.trim().toLowerCase());
     if (sq) {
-      navigate(`/squads/${sq.id}`);
+      navigate(`/teams/${sq.id}`);
       setQ('');
     }
   };
@@ -164,17 +165,17 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
       <div className="relative hidden w-56 lg:block">
         <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-outline" />
         <input
-          list="squad-names"
+          list="team-names"
           value={q}
           onChange={(e) => {
             setQ(e.target.value);
             goSearch(e.target.value);
           }}
           onKeyDown={(e) => e.key === 'Enter' && goSearch(q)}
-          placeholder="Jump to squad…"
+          placeholder="Jump to team…"
           className="w-full rounded border border-outline-variant bg-surface-container-lowest py-2 pl-10 pr-3 text-body-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
         />
-        <datalist id="squad-names">
+        <datalist id="team-names">
           {data.squads.map((s) => (
             <option key={s.id} value={s.name} />
           ))}
@@ -191,7 +192,7 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
               className="w-full max-w-[220px] cursor-pointer truncate rounded border border-outline-variant bg-surface-container-lowest py-2 pl-3 pr-8 text-body-sm font-medium text-on-surface focus:border-primary focus:outline-none"
               aria-label="Scope"
             >
-              <option value="all">All of Global Platforms</option>
+              <option value="all">All Areas</option>
               <optgroup label="Domain">
                 {data.domains.map((d) => (
                   <option key={d.id} value={`domain:${d.id}`}>
@@ -206,13 +207,22 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Squad">
+              <optgroup label="Team">
                 {data.squads.map((s) => (
                   <option key={s.id} value={`squad:${s.id}`}>
                     {s.name}
                   </option>
                 ))}
               </optgroup>
+              {data.pods.length > 0 && (
+                <optgroup label="Pod">
+                  {data.pods.map((p) => (
+                    <option key={p.id} value={`pod:${p.id}`}>
+                      {p.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
             <MdChevronRight className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rotate-90 text-outline" />
           </span>
@@ -273,6 +283,7 @@ export function Shell({ path, children }: { path: string; children: ReactNode })
         )}
         <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-8 md:px-6">{children}</main>
       </div>
+      <InsightPanel path={path} />
     </div>
   );
 }

@@ -33,8 +33,8 @@ export function InsightsPanel({ insights, limit = 6, title = 'Actionable insight
                   <h4 className="text-body-sm font-semibold text-on-surface">{i.title}</h4>
                   <p className="mt-1 text-body-sm text-on-surface-variant">{i.body}</p>
                   <p className="mt-2 border-l-2 border-outline-variant pl-2 text-[13px] italic text-on-surface-variant">{i.prompt}</p>
-                  <Link to={`/squads/${i.squadId}`} className="mt-2 inline-block text-label-md text-series-1 hover:underline">
-                    Open squad →
+                  <Link to={`/teams/${i.squadId}`} className="mt-2 inline-block text-label-md text-series-1 hover:underline">
+                    Open team →
                   </Link>
                 </div>
               </article>

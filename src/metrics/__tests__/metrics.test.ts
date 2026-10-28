@@ -26,7 +26,6 @@ const item = (over: Partial<WorkItem>): WorkItem => ({
   summary: '',
   storyPoints: 3,
   initiativeId: null,
-  podId: null,
   createdAt: day(30),
   startedAt: day(10),
   doneAt: day(5),

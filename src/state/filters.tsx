@@ -8,12 +8,14 @@ import type { PeriodDays } from '../metrics/period';
  *  - all     → Global Platforms (leadership)
  *  - domain  → domain manager view
  *  - dl      → a Delivery Lead's squads
+ *  - pod     → a pod (group of teams)
  *  - squad   → a single squad (squads see their own data first)
  */
 export type Scope =
   | { kind: 'all' }
   | { kind: 'domain'; id: string }
   | { kind: 'dl'; id: string }
+  | { kind: 'pod'; id: string }
   | { kind: 'squad'; id: string };
 
 export type TeamTypeFilter = 'all' | TeamType;
@@ -65,6 +67,7 @@ export function squadsInScope(data: Dataset, scope: Scope, teamType: TeamTypeFil
   let squads = data.squads;
   if (scope.kind === 'domain') squads = squads.filter((s) => s.domainId === scope.id);
   if (scope.kind === 'dl') squads = squads.filter((s) => s.deliveryLeadId === scope.id);
+  if (scope.kind === 'pod') squads = squads.filter((s) => s.podId === scope.id);
   if (scope.kind === 'squad') squads = squads.filter((s) => s.id === scope.id);
   if (teamType !== 'all') squads = squads.filter((s) => s.teamType === teamType);
   return squads;
@@ -77,9 +80,11 @@ export function scopeLabel(data: Dataset, scope: Scope): string {
     case 'domain':
       return data.domains.find((d) => d.id === scope.id)?.name ?? 'Domain';
     case 'dl':
-      return `${data.deliveryLeads.find((d) => d.id === scope.id)?.name ?? 'Delivery Lead'}'s squads`;
+      return `${data.deliveryLeads.find((d) => d.id === scope.id)?.name ?? 'Delivery Lead'}'s teams`;
+    case 'pod':
+      return `${data.pods.find((p) => p.id === scope.id)?.name ?? 'Pod'} pod`;
     case 'squad':
-      return data.squads.find((s) => s.id === scope.id)?.name ?? 'Squad';
+      return data.squads.find((s) => s.id === scope.id)?.name ?? 'Team';
   }
 }
 

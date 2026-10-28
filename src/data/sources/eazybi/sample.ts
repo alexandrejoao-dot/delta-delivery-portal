@@ -58,6 +58,7 @@ export function toEazybiExports(data: Dataset): { issuesCsv: string; sprintsCsv:
     domain: data.domains.find((x) => x.id === sq.domainId)?.name ?? '',
     valueStream: data.valueStreams.find((x) => x.id === sq.valueStreamId)?.name,
     deliveryLead: data.deliveryLeads.find((x) => x.id === sq.deliveryLeadId)?.name,
+    pod: data.pods.find((x) => x.id === sq.podId)?.name,
     issueMatch: [sq.boardKey],
     ...(sq.teamType === 'scrum' ? { sprintMatch: [`${sq.name} board`] } : {}),
   }));

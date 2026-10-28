@@ -17,10 +17,11 @@ function Page({ path }: { path: string }) {
   if (path === '/health' || path === '/predictability') return <Predictability />;
   if (path === '/flow') return <Flow />;
   if (path === '/quality') return <Quality />;
-  if (path === '/squads') return <SquadList />;
+  // /squads kept so links shared before the squads → teams rename still work
+  if (path === '/teams' || path === '/squads') return <SquadList />;
   if (path === '/metrics') return <MetricCatalogue />;
   if (path === '/data') return <DataSources />;
-  const squad = matchRoute('/squads/:id', path);
+  const squad = matchRoute('/teams/:id', path) ?? matchRoute('/squads/:id', path);
   if (squad) return <SquadDetail id={squad.id} />;
   const coming = matchRoute('/coming/:id', path);
   if (coming) return <ComingSoon id={coming.id} />;

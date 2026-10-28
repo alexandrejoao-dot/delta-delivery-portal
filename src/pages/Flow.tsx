@@ -48,10 +48,10 @@ export function AgeingWipTable({ rows, showSquad = true }: { rows: AgeingRow[]; 
           ? [
               {
                 key: 'sq',
-                header: 'Squad',
+                header: 'Team',
                 sortValue: (r: AgeingRow) => r.squad.name,
                 render: (r: AgeingRow) => (
-                  <Link to={`/squads/${r.squad.id}`} className="hover:underline">
+                  <Link to={`/teams/${r.squad.id}`} className="hover:underline">
                     {r.squad.name}
                   </Link>
                 ),
@@ -62,9 +62,9 @@ export function AgeingWipTable({ rows, showSquad = true }: { rows: AgeingRow[]; 
         { key: 'age', header: 'Age', align: 'right', sortValue: (r) => r.age, render: (r) => <span className="tabular font-medium">{r.age.toFixed(1)}d</span> },
         {
           key: 'ratio',
-          header: 'vs squad p85',
+          header: 'vs team p85',
           align: 'right',
-          tip: 'Age relative to the squad’s 85th percentile cycle time (last 90 days). Above 1× = older than 85% of recently finished work.',
+          tip: 'Age relative to the team’s 85th percentile cycle time (last 90 days). Above 1× = older than 85% of recently finished work.',
           sortValue: (r) => r.age / r.p85,
           render: (r) => {
             const ratio = r.age / r.p85;
@@ -106,7 +106,7 @@ export function Flow() {
     return { labels, counts };
   }, [done]);
 
-  if (!squads.length) return <EmptyState title="No squads in this scope" />;
+  if (!squads.length) return <EmptyState title="No teams in this scope" />;
   const pl = `${period}d`;
 
   return (
@@ -177,7 +177,7 @@ export function Flow() {
       <Card className="overflow-hidden">
         <CardHeader
           title="Work in progress, oldest first"
-          subtitle="Items still in progress, compared with their squad’s 85th percentile cycle time — the best place to start a stand-up."
+          subtitle="Items still in progress, compared with their team’s 85th percentile cycle time — the best place to start a stand-up."
           actions={
             <Button
               icon={<MdDownload />}

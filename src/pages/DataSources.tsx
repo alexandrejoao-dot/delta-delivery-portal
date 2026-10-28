@@ -3,7 +3,7 @@ import { useDataset } from '../data/DataContext';
 import { longDate } from '../lib/format';
 
 const adapters = [
-  { id: 'mock', name: 'Dummy data', desc: 'Seeded generator with behavioural squad profiles. Deterministic — same data on every load.', status: 'Live in POC' },
+  { id: 'mock', name: 'Dummy data', desc: 'Seeded generator with behavioural team profiles. Deterministic — same data on every load.', status: 'Live in POC' },
   { id: 'eazybi', name: 'eazyBI snapshot', desc: 'Scheduled export from eazyBI reports → canonical snapshot JSON. Trusted numbers the organisation already uses.', status: 'Next' },
   { id: 'jira', name: 'Jira changelog (direct)', desc: 'REST API + changelog extraction. Replaces eazyBI when it is deprecated; validated against historical snapshots.', status: 'Later' },
 ];
@@ -16,7 +16,7 @@ export function DataSources() {
     ['Domains', data.domains.length],
     ['Value streams', data.valueStreams.length],
     ['Delivery Leads', data.deliveryLeads.length],
-    ['Squads', data.squads.length],
+    ['Teams', data.squads.length],
     ['Initiatives', data.initiatives.length],
     ['Work items', data.workItems.length],
     ['Sprints', data.sprints.length],

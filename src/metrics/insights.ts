@@ -60,7 +60,7 @@ export function generateInsights(data: Dataset, squads: Squad[], period: PeriodD
         id: `${sq.id}-cycle-up`, tone: 'positive', squadId: sq.id, metricId: 'cycleP85',
         title: `${sq.name}: faster flow`,
         body: `85th percentile cycle time improved from ${d1(p.cycleP85)} to ${d1(c.cycleP85)}.`,
-        prompt: 'What changed? Worth capturing so other squads can learn from it.',
+        prompt: 'What changed? Worth capturing so other teams can learn from it.',
       });
     }
 

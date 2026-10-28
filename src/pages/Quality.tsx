@@ -54,7 +54,7 @@ export function Quality() {
     [data, squads, period],
   );
 
-  if (!squads.length) return <EmptyState title="No squads in this scope" />;
+  if (!squads.length) return <EmptyState title="No teams in this scope" />;
   const net = bal.created - bal.resolved;
   const prevNet = prevBal.created - prevBal.resolved;
 
@@ -102,17 +102,17 @@ export function Quality() {
 
       {squads.length > 1 && (
         <Card className="overflow-hidden">
-          <CardHeader title="Quality by squad" />
+          <CardHeader title="Quality by team" />
           <SortableTable
             rows={rows}
             rowKey={(r) => r.squad.id}
-            onRowClick={(r) => navigate(`/squads/${r.squad.id}`)}
+            onRowClick={(r) => navigate(`/teams/${r.squad.id}`)}
             initialSort={{ key: 'ratio', dir: 'desc' }}
             minWidth={720}
             columns={[
               {
                 key: 'name',
-                header: 'Squad',
+                header: 'Team',
                 sortValue: (r) => r.squad.name,
                 render: (r) => (
                   <div className="flex items-center gap-3">

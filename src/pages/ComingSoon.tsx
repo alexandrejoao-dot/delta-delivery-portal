@@ -18,7 +18,7 @@ const plans: Record<string, { title: string; maturity: string; metrics: string[]
     title: 'Risk & Security',
     maturity: 'To be scoped',
     metrics: ['Vulnerability age by severity', 'Overdue security actions', 'Audit findings open'],
-    note: 'Scope with Security partners; likely a squad-level view first.',
+    note: 'Scope with Security partners; likely a team-level view first.',
   },
   finance: {
     title: 'Finance',

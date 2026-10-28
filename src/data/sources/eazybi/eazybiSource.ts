@@ -15,6 +15,9 @@ export const eazybiSource: DataSource = {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Snapshot fetch failed: ${res.status}`);
     const data = (await res.json()) as Dataset;
-    return { ...data, source: { id: 'eazybi', label: 'eazyBI snapshot', isDummy: false } };
+    // Snapshots built before pods existed have none
+    const pods = data.pods ?? [];
+    const squads = data.squads.map((s) => ({ ...s, podId: s.podId ?? null }));
+    return { ...data, pods, squads, source: { id: 'eazybi', label: 'eazyBI snapshot', isDummy: false } };
   },
 };

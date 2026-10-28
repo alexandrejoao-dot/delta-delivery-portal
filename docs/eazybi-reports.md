@@ -80,7 +80,7 @@ are named differently, keep them and put your names in `columns.json` (step 5).
 
 ## 4. Squad list (`eazybi-data/squads.json`)
 
-Written by hand, once. `issueMatch` is what links issues to the squad — by default the Jira
+Written by hand, once. `pod` (optional) groups teams into pods. `issueMatch` is what links issues to the squad — by default the Jira
 **project key** taken from the issue key. `sprintMatch` is the board name (or the start of the
 sprint names, if the export has no Board column).
 
@@ -93,6 +93,7 @@ sprint names, if the export has no Board column).
       "domain": "Commerce",
       "valueStream": "Checkout",
       "deliveryLead": "A. Lead",
+      "pod": "Checkout",
       "issueMatch": ["PAY"],
       "sprintMatch": ["PAY board"]
     },

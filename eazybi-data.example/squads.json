@@ -6,6 +6,7 @@
       "domain": "Player Experience",
       "valueStream": "Onboarding & Account",
       "deliveryLead": "Ana Sousa",
+      "pod": "Growth",
       "issueMatch": [
         "ATL"
       ],
@@ -19,6 +20,7 @@
       "domain": "Player Experience",
       "valueStream": "Engagement",
       "deliveryLead": "Ana Sousa",
+      "pod": "Growth",
       "issueMatch": [
         "BOR"
       ],
@@ -32,6 +34,7 @@
       "domain": "Player Experience",
       "valueStream": "Engagement",
       "deliveryLead": "Ana Sousa",
+      "pod": "Growth",
       "issueMatch": [
         "COB"
       ]
@@ -42,6 +45,7 @@
       "domain": "Payments & Wallet",
       "valueStream": "Deposits",
       "deliveryLead": "Pedro Lima",
+      "pod": "Checkout",
       "issueMatch": [
         "DUN"
       ],
@@ -55,6 +59,7 @@
       "domain": "Payments & Wallet",
       "valueStream": "Deposits",
       "deliveryLead": "Pedro Lima",
+      "pod": "Checkout",
       "issueMatch": [
         "EMB"
       ],
@@ -68,6 +73,7 @@
       "domain": "Payments & Wallet",
       "valueStream": "Withdrawals & Risk",
       "deliveryLead": "Pedro Lima",
+      "pod": "Risk & Compliance",
       "issueMatch": [
         "FJO"
       ]
@@ -78,6 +84,7 @@
       "domain": "Payments & Wallet",
       "valueStream": "Withdrawals & Risk",
       "deliveryLead": "Sofia Costa",
+      "pod": "Risk & Compliance",
       "issueMatch": [
         "GRA"
       ],
@@ -91,6 +98,7 @@
       "domain": "Core Platform",
       "valueStream": "Identity & Access",
       "deliveryLead": "Sofia Costa",
+      "pod": "Identity",
       "issueMatch": [
         "HAL"
       ],
@@ -104,6 +112,7 @@
       "domain": "Core Platform",
       "valueStream": "Identity & Access",
       "deliveryLead": "Sofia Costa",
+      "pod": "Identity",
       "issueMatch": [
         "IRI"
       ]
@@ -114,6 +123,7 @@
       "domain": "Core Platform",
       "valueStream": "Platform Services",
       "deliveryLead": "Tiago Nunes",
+      "pod": "Foundations",
       "issueMatch": [
         "JUN"
       ],
@@ -127,6 +137,7 @@
       "domain": "Core Platform",
       "valueStream": "Platform Services",
       "deliveryLead": "Tiago Nunes",
+      "pod": "Foundations",
       "issueMatch": [
         "KES"
       ],
@@ -140,6 +151,7 @@
       "domain": "Core Platform",
       "valueStream": "Platform Services",
       "deliveryLead": "Tiago Nunes",
+      "pod": "Foundations",
       "issueMatch": [
         "LUM"
       ]

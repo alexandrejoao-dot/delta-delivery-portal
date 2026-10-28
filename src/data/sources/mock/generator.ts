@@ -6,6 +6,7 @@ import type {
   PulseCheck,
   PulseDimension,
   Sprint,
+  Pod,
   Squad,
   TeamType,
   ValueStream,
@@ -83,6 +84,30 @@ const deliveryLeads: DeliveryLead[] = [
   { id: 'dl-sofia', name: 'Sofia Costa' },
   { id: 'dl-tiago', name: 'Tiago Nunes' },
 ];
+
+const pods: Pod[] = [
+  { id: 'pod-growth', name: 'Growth' },
+  { id: 'pod-checkout', name: 'Checkout' },
+  { id: 'pod-risk', name: 'Risk & Compliance' },
+  { id: 'pod-identity', name: 'Identity' },
+  { id: 'pod-foundations', name: 'Foundations' },
+];
+
+/** Pod membership by team — kept out of the seeds so generated values never shift */
+const podOf: Record<string, string> = {
+  'sq-atlas': 'pod-growth',
+  'sq-borealis': 'pod-growth',
+  'sq-cobalt': 'pod-growth',
+  'sq-dune': 'pod-checkout',
+  'sq-ember': 'pod-checkout',
+  'sq-fjord': 'pod-risk',
+  'sq-granite': 'pod-risk',
+  'sq-halo': 'pod-identity',
+  'sq-iris': 'pod-identity',
+  'sq-juno': 'pod-foundations',
+  'sq-kestrel': 'pod-foundations',
+  'sq-lumen': 'pod-foundations',
+};
 
 const squadSeeds: SquadSeed[] = [
   {
@@ -246,7 +271,6 @@ function buildWorkItems(rng: Rng, catRng: Rng, seed: SquadSeed, asOfMs: number, 
         summary: summary.charAt(0).toUpperCase() + summary.slice(1),
         storyPoints: type === 'story' ? rng.pick(STORY_POINTS) : type === 'bug' ? rng.pick([1, 2, 3] as const) : null,
         initiativeId: type === 'story' && myInitiatives.length && rng.chance(0.7) ? rng.pick(myInitiatives).id : null,
-        podId: null,
         createdAt: iso(createdMs),
         startedAt: startedMs <= asOfMs ? iso(startedMs) : null,
         doneAt: doneMs <= asOfMs ? iso(doneMs) : null,
@@ -319,7 +343,7 @@ export function generateDataset(seed = 20261002, asOf = MOCK_AS_OF): Dataset {
   const rng = createRng(seed);
   const asOfMs = Date.parse(asOf);
   const initiatives = buildInitiatives(asOfMs);
-  const squads: Squad[] = squadSeeds.map(({ profile: _profile, ...s }) => s);
+  const squads: Squad[] = squadSeeds.map(({ profile: _profile, ...s }) => ({ ...s, podId: podOf[s.id] ?? null }));
   // Separate streams for later additions, so existing generated values (and the squad stories) stay put
   const catRng = createRng(seed + 1);
   const pulseRng = createRng(seed + 2);
@@ -332,6 +356,7 @@ export function generateDataset(seed = 20261002, asOf = MOCK_AS_OF): Dataset {
     domains,
     valueStreams,
     deliveryLeads,
+    pods,
     squads,
     initiatives,
     workItems,

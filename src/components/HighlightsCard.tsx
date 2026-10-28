@@ -111,7 +111,7 @@ export function HighlightsCard({ data, squads, period }: { data: Dataset; squads
               <h4 className="mt-3 text-headline-sm text-on-surface">{s.text.headline}</h4>
               <p className="mt-1 text-body-sm text-on-surface-variant">{s.text.body}</p>
               <p className="mt-4 border-l-2 border-outline-variant pl-3 text-body-sm italic text-on-surface-variant">{s.text.prompt}</p>
-              <Link to={`/squads/${s.squad.id}`} className="mt-auto pt-4 text-label-md text-series-1 hover:underline">
+              <Link to={`/teams/${s.squad.id}`} className="mt-auto pt-4 text-label-md text-series-1 hover:underline">
                 Open {s.squad.name} →
               </Link>
             </div>

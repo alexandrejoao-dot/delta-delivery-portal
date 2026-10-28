@@ -14,6 +14,7 @@ interface Row {
   index: number;
   domain: string;
   dl: string;
+  pod: string;
   sc: Scorecard;
   health: Health;
   reasons: MetricId[];
@@ -32,6 +33,7 @@ export function useSquadRows(data: Dataset, squads: Squad[], period: PeriodDays)
           index: data.squads.indexOf(sq),
           domain: data.domains.find((d) => d.id === sq.domainId)?.name ?? '',
           dl: data.deliveryLeads.find((d) => d.id === sq.deliveryLeadId)?.name ?? '',
+          pod: data.pods.find((p) => p.id === sq.podId)?.name ?? '',
           sc,
           health: h.health,
           reasons: h.reasons,
@@ -69,14 +71,14 @@ interface MatrixProps {
 
 const filterLabel: Record<Health, string> = { attention: 'Needs attention', watch: 'Watch', good: 'On track' };
 
-export function SquadMatrix({ data, squads, period, title = 'Squad health matrix', signalFilter, onClearFilter, id }: MatrixProps) {
+export function SquadMatrix({ data, squads, period, title = 'Team health matrix', signalFilter, onClearFilter, id }: MatrixProps) {
   const allRows = useSquadRows(data, squads, period);
   const rows = signalFilter ? allRows.filter((r) => r.health === signalFilter) : allRows;
 
   const columns: Column<Row>[] = [
     {
       key: 'name',
-      header: 'Squad',
+      header: 'Team',
       sortValue: (r) => r.squad.name,
       render: (r) => (
         <div className="flex items-center gap-3">
@@ -169,11 +171,12 @@ export function SquadMatrix({ data, squads, period, title = 'Squad health matrix
 
   const exportCsv = () =>
     downloadCsv(
-      `squad-matrix-${period}d.csv`,
+      `team-matrix-${period}d.csv`,
       rows.map((r) => ({
-        squad: r.squad.name,
+        team: r.squad.name,
         domain: r.domain,
         delivery_lead: r.dl,
+        pod: r.pod,
         team_type: r.squad.teamType,
         signal: r.health,
         health_index: r.sc.current.healthIndex,
@@ -192,14 +195,14 @@ export function SquadMatrix({ data, squads, period, title = 'Squad health matrix
         <div>
           <h3 className="text-headline-sm text-on-surface">{title}</h3>
           <p className="mt-0.5 text-body-sm text-on-surface-variant">
-            Last {period} days · click a squad for its detail. Signals start conversations — they are not rankings.
+            Last {period} days · click a team for its detail. Signals start conversations — they are not rankings.
           </p>
           {signalFilter && (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-body-sm text-on-surface-variant" role="status">
               <span>Showing</span>
               <StatusBadge status={signalFilter} size="sm" label={filterLabel[signalFilter]} />
               <span>
-                {rows.length} of {allRows.length} squads
+                {rows.length} of {allRows.length} teams
               </span>
               {onClearFilter && (
                 <button type="button" onClick={onClearFilter} className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-label-md text-series-1 hover:bg-surface-container-low">
@@ -218,7 +221,7 @@ export function SquadMatrix({ data, squads, period, title = 'Squad health matrix
         rows={rows}
         columns={columns}
         rowKey={(r) => r.squad.id}
-        onRowClick={(r) => navigate(`/squads/${r.squad.id}`)}
+        onRowClick={(r) => navigate(`/teams/${r.squad.id}`)}
         initialSort={{ key: 'health', dir: 'asc' }}
         fitWidth
       />

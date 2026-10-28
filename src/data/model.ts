@@ -7,8 +7,7 @@
  *
  * Design rules carried over from the platform decisions:
  *  - `teamType` is a first-class dimension: Scrum and Kanban are measured differently.
- *  - `podId` is a point-in-time attribute of a work item, NOT a grouping key.
- *    Longitudinal trends anchor on squad / initiative / value stream.
+ *  - A pod is a group of teams (squads), like a domain or a Delivery Lead's portfolio.
  *  - All dates are ISO strings (UTC, yyyy-mm-dd or full ISO) to keep snapshots serialisable.
  */
 
@@ -34,12 +33,20 @@ export interface DeliveryLead {
   name: string;
 }
 
+/** A group of teams. */
+export interface Pod {
+  id: string;
+  name: string;
+}
+
 export interface Squad {
   id: string;
   name: string;
   domainId: string;
   valueStreamId: string;
   deliveryLeadId: string;
+  /** null when the team isn't part of a pod */
+  podId: string | null;
   teamType: TeamType;
   /** Jira project / board key the squad's data is sourced from */
   boardKey: string;
@@ -81,8 +88,6 @@ export interface WorkItem {
   summary: string;
   storyPoints: number | null;
   initiativeId: string | null;
-  /** Point-in-time pod membership (null for stable squads). Never group trends by this. */
-  podId: string | null;
   createdAt: ISODate;
   /** First transition into an "In Progress" status category */
   startedAt: ISODate | null;
@@ -147,6 +152,7 @@ export interface Dataset {
   domains: Domain[];
   valueStreams: ValueStream[];
   deliveryLeads: DeliveryLead[];
+  pods: Pod[];
   squads: Squad[];
   initiatives: Initiative[];
   workItems: WorkItem[];

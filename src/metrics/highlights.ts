@@ -98,7 +98,7 @@ export const highlights = (data: Dataset, squads: Squad[], period: PeriodDays, c
 
 /** Coaching prompt for a drop — what to look at first. */
 const DROP_PROMPTS: Partial<Record<MetricId, string>> = {
-  sayDo: 'Is the squad planning to recent velocity, or to capacity?',
+  sayDo: 'Is the team planning to recent velocity, or to capacity?',
   scopeChange: 'Where is the mid-sprint work coming from — could some of it wait for planning?',
   velocityCv: 'Are sprints disrupted by unplanned work, or is estimation drifting?',
   throughputCv: 'Is unplanned work or item size making weeks uneven?',
@@ -129,7 +129,7 @@ export function describeHighlight(h: Highlight, squadName: string, period: Perio
       label: 'Heads-up',
       headline: `${squadName}: ${metric} ${higherIsBetter ? 'fell' : 'rose'} to ${fmt(h.metricId, h.to)}`,
       body: `${went} from ${fmt(h.metricId, h.from)} in ${since} — now ${h.status === 'attention' ? 'needs attention' : 'on watch'}.`,
-      prompt: DROP_PROMPTS[h.metricId] ?? 'What changed for the squad this period?',
+      prompt: DROP_PROMPTS[h.metricId] ?? 'What changed for the team this period?',
     };
   }
   if (h.kind === 'milestone') {
@@ -137,13 +137,13 @@ export function describeHighlight(h: Highlight, squadName: string, period: Perio
       label: 'Target met',
       headline: `${squadName}: ${metric} is on track`,
       body: `${went} from ${fmt(h.metricId, h.from)} to ${fmt(h.metricId, h.to)} — ${higherIsBetter ? 'at or above' : 'within'} the ${fmt(h.metricId, def.thresholds!.good)} target.`,
-      prompt: 'What made the difference? Worth sharing with other squads.',
+      prompt: 'What made the difference? Worth sharing with other teams.',
     };
   }
   return {
     label: 'Big improvement',
     headline: `${squadName}: ${metric} improved to ${fmt(h.metricId, h.to)}`,
     body: `${went} from ${fmt(h.metricId, h.from)} in ${since}. Not on track yet, but clearly moving the right way.`,
-    prompt: 'Keep going — what is helping, and can the squad protect it?',
+    prompt: 'Keep going — what is helping, and can the team protect it?',
   };
 }
