@@ -9,7 +9,7 @@ This document describes Delta Hub completely in words, with no code, so it can b
 1. Create an empty folder, save this document in it as `SPEC.md`, and open Claude Code there.
 2. Ask: "Read SPEC.md. Build step 1 only, then show me how to run it." Then step 2, and so on.
 3. After each step, ask Claude to run the type check and tests, and open the app to compare with the acceptance checks.
-4. Ask Claude to keep a short `CLAUDE.md` with the principles in section 2, so later sessions follow them.
+4. Ask Claude to keep a short `CLAUDE.md` with the principles in section 1, so later sessions follow them.
 
 Where this spec gives exact numbers (thresholds, profiles, seed), use them: the checks depend on them. Where it gives only intent (layout details, wording), Claude may choose. The dummy data is random but seeded, so the rebuilt numbers will be close to, not identical with, the original.
 
@@ -612,4 +612,4 @@ The reference numbers come from the original at the 90-day period and All Areas 
 | 7. Teams and the rest | Teams list and detail, Metric catalogue, Data sources, Coming soon, Insight panel preview | Granite shows Needs attention with Say/Do about 59%; "Make this my view" sets the scope; the catalogue lists all 18 metrics; the Insight panel answers with example text |
 | 8. eazyBI path | Converter command, sample exports, env switch (section 10) | The sample round trip matches the dummy metrics; the summary shows counts only; with the env set, Data sources says "eazyBI snapshot" |
 
-After step 8, keep the `CLAUDE.md` up to date with the principles in section 2 and the commands to run. Do this before connecting any real data.
+After step 8, keep the `CLAUDE.md` up to date with the principles in section 1 and the commands to run. Do this before connecting any real data.
