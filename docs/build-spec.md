@@ -86,7 +86,7 @@ One `Dataset` object holds everything. Dates are ISO strings (UTC), so a snapsho
 
 **Work categories** (fixed order, which is also the colour order): OKR aligned, Non-OKR aligned, Keep the lights on, L&D, None. "None" means not categorised in Jira; it is shown so the mix always adds up to everything finished.
 
-**Pulse dimensions** (after the Spotify squad health check), in order: Delivering value, Easy to release, Health of codebase, Speed, Suitable process, Mission, Fun, Learning, Support, Pawns or players. Pulses are aggregated per team, never per person. A pulse with fewer than 3 respondents is hidden.
+**Pulse dimensions** (after the Spotify squad health check), in order: Delivering value, Easy to release, Health of codebase, Speed, Suitable process, Mission, Fun, Learning, Support, Pawns or players. Their ids, in the same order: value, release, codebase, speed, process, mission, fun, learning, support, autonomy; the profiles in section 6 use these ids. Pulses are aggregated per team, never per person. A pulse with fewer than 3 respondents is hidden.
 
 ## 4. Periods, windows and trends
 
