@@ -112,7 +112,7 @@ Trend x-axis labels are the window end dates, written as day + short month ("2 O
 
 ## 5. Metric catalogue
 
-Eighteen metrics, each defined once in the catalogue. A definition has: id, name, category, unit, direction (higher, lower or neutral), team types, description, formula, source, optional thresholds {good, watch} and an optional caveat. The Metric catalogue page renders these definitions as they stand.
+Eighteen metrics, each defined once in the catalogue. A definition has: id, name, category, unit, direction (higher, lower or neutral), team types, description, formula, source, optional thresholds {good, watch} and an optional caveat. The Metric catalogue page renders these definitions as they stand. Categories, in this order: Predictability (sayDo, scopeChange, velocity, velocityCv, goalHitRate, throughputCv); Flow (throughput, cycleP50, cycleP85, leadP85, wip, ageingWipShare); Quality (bugRatio); Health (healthIndex, pulseScore); Investment (okrShare); Forecast (deliveryForecast, forecastAccuracy).
 
 | Id | Name | Unit | Better | Teams | Formula (window = current period) | On track | Watch |
 | --- | --- | --- | --- | --- | --- | --- | --- |
