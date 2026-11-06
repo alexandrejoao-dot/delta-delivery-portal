@@ -502,6 +502,7 @@ The style is called "Precision Enterprise":
 - A dark sidebar with a light left accent bar on the active item.
 
 Status colours are reserved for state, and always come with an icon and a label.
+- **Cursor:** Tailwind v4 drops the pointer cursor on buttons; add a base rule giving `button:not(:disabled)`, `[role=button]`, `select` and `summary` `cursor: pointer`.
 
 **Colours.**
 

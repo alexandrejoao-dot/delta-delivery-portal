@@ -110,3 +110,13 @@
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
 }
+
+/* Tailwind v4 no longer gives buttons a pointer cursor — restore it so everything clickable looks clickable */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  select,
+  summary {
+    cursor: pointer;
+  }
+}
