@@ -228,7 +228,7 @@ Each value stream has 2 initiatives, both in progress. The first is due 30 days 
 
 Juno's share of non-OKR stories moves 0.25→0.45; every other team uses 0.2.
 
-**Work items.** Generate the teams in table order, all from the main stream. For each team and each weekday of the 220 days before the snapshot:
+**Work items.** Generate the teams in table order, all from the main stream. For each team and each weekday of the 220 days before the snapshot (history start = snapshot − 220 × 24 h, keeping the 18:00 time; day d starts at historyStart + d days; no rounding to midnight):
 
 1. Draw a Poisson count with rate (items/wk at that point) ÷ 5.
 2. For each item, set `createdAt` = that day + a uniform 0.3–0.7 of a day.
