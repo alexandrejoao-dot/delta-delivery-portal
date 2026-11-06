@@ -511,6 +511,7 @@ Status colours are reserved for state, and always come with an icon and a label.
 | primary-container | #1e293b | Selected toggle, hover |
 | on-primary-container | #8590a6 | Sidebar text |
 | primary-fixed | #d8e3fb | Active sidebar text |
+| on-primary-fixed-variant | #3c475a | Sidebar separators (at 40% opacity), active item background |
 | secondary-fixed | #d5e3fd | Logo tile, avatar, accents |
 | surface | #f7f9fb | Page background |
 | surface-container-lowest | #ffffff | Cards |
