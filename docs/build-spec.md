@@ -322,7 +322,7 @@ Each page opens with a header: a title, plus a subtitle of the form "\<scope> ·
 Title "Delivery overview". Subtitle: "\<scope> · 12 teams (8 Scrum, 4 Kanban) · last 90 days".
 
 1. **Four KPI tiles:**
-   - **Health index:** links to Health index. Footer: "7 of 12 teams on track · 0 need attention", counting each team by its own Health index band (≥ 80 on track, < 50 needs attention), not by the team health signal; for one team, a line naming the inputs.
+   - **Health index:** links to Health index. Footer: "7 of 12 teams score 80+ · 0 below 50", counting each team by its own Health index (not by the team health signal, which the Signals card counts, so the two can differ); for one team, a line naming the inputs.
    - **Pulse check:** the footer lists the biggest rise and the biggest fall by dimension (label, delta chip, current score), then "Biggest rise and fall by dimension · change vs prev. 90d".
    - **Lead time (85th pct):** footer "Of which in progress (cycle time, 85th pct): 8.0d".
    - **Development categories:**
@@ -608,7 +608,7 @@ The reference numbers come from the original at the 90-day period and All Areas 
 | 2. Data | Data model (section 3), seeded random generator, dummy-data generator (section 6), data context, source switch | 12 teams, about 2,400 items, 104 sprints (8 × 13), 84 pulses; same values on every reload |
 | 3. Metrics | Stats, periods, every metric in section 5, scores, health index, team signal, scorecard with memo, trends; unit tests for each | Tests cover percentile, CV, Say/Do pooling, the scoring anchors (100 / 50 / 0), the 3-input minimum, forecast determinism, and that pulses under 3 respondents are hidden |
 | 4. Filters and kit | Scope and period with saved state; KPI tile, delta chip, status badge, sortable table, toggle; the 4 chart kinds | Changing scope or period updates the subtitle; a reload keeps them; Pod groups list the 5 pods |
-| 5. Overview | The 4 tiles, highlights carousel, signals card, team matrix with CSV, insights panel (section 8) | Health index about 86/100, "7 of 12 teams on track"; pulse about 3.6; lead time p85 about 20d; OKR aligned about 50%, with categories adding up to 100%; Borealis, Granite and Fjord among the first insights |
+| 5. Overview | The 4 tiles, highlights carousel, signals card, team matrix with CSV, insights panel (section 8) | Health index about 86/100, "7 of 12 teams score 80+ · 0 below 50" (at 90d); pulse about 3.6; lead time p85 about 20d; OKR aligned about 50%, with categories adding up to 100%; Borealis, Granite and Fjord among the first insights |
 | 6. Health index, Flow, Quality | The three pages as in section 8 | Scrum boxes: cycle p85 about 8d, completion about 79% (Watch), stability about 11%, scope volatility about 14%, forecasting accuracy about 90%; the Kanban toggle shows 4 teams; Fjord gets the "flow is slowing down" insight; Ember has the highest bug ratio (about 33%) |
 | 7. Teams and the rest | Teams list and detail, Metric catalogue, Data sources, Coming soon, Insight panel preview | Granite shows Needs attention with Say/Do about 59%; "Make this my view" sets the scope; the catalogue lists all 18 metrics; the Insight panel answers with example text |
 | 8. eazyBI path | Converter command, sample exports, env switch (section 10) | The sample round trip matches the dummy metrics; the summary shows counts only; with the env set, Data sources says "eazyBI snapshot" |

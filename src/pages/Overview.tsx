@@ -80,8 +80,8 @@ export function Overview() {
           footer={
             squads.length > 1 ? (
               <>
-                <span className="font-semibold text-on-surface">{indexCounts.good}</span> of {squads.length} teams on track ·{' '}
-                <span className="font-semibold text-on-surface">{indexCounts.attention}</span> need attention
+                <span className="font-semibold text-on-surface">{indexCounts.good}</span> of {squads.length} teams score 80+ ·{' '}
+                <span className="font-semibold text-on-surface">{indexCounts.attention}</span> below 50
               </>
             ) : (
               'Completion, cycle time, stability, scope, lead time and pulse — equal weight'
