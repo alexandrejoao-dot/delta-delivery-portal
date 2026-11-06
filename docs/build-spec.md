@@ -322,7 +322,7 @@ Each page opens with a header: a title, plus a subtitle of the form "\<scope> ·
 Title "Delivery overview". Subtitle: "\<scope> · 12 teams (8 Scrum, 4 Kanban) · last 90 days".
 
 1. **Four KPI tiles:**
-   - **Health index:** links to Health index. Footer: "7 of 12 teams on track · 0 need attention"; for one team, a line naming the inputs.
+   - **Health index:** links to Health index. Footer: "7 of 12 teams on track · 0 need attention", counting each team by its own Health index band (≥ 80 on track, < 50 needs attention), not by the team health signal; for one team, a line naming the inputs.
    - **Pulse check:** the footer lists the biggest rise and the biggest fall by dimension (label, delta chip, current score), then "Biggest rise and fall by dimension · change vs prev. 90d".
    - **Lead time (85th pct):** footer "Of which in progress (cycle time, 85th pct): 8.0d".
    - **Development categories:**
